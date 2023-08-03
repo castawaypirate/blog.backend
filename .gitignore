@@ -1,0 +1,19 @@
+# General
+.DS_Store
+Thumbs.db
+*.log
+*.php.log
+
+# Composer
+/vendor/
+/composer.lock
+/composer.phar
+
+# IDE and editor specific files (optional, add if needed)
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Local development files and configurations (optional, add if needed)
+.env
