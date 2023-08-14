@@ -12,15 +12,12 @@ class JWTMiddleware
         $this->secretKey = $secretKey;
     }
 
-    public function validateToken($request)
+    public function validateToken()
     {
         $authorizationHeader = null;
         if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
             $authorizationHeader = $_SERVER['HTTP_AUTHORIZATION'];
-        } elseif (isset($_SERVER['Authorization'])) {
-            $authorizationHeader = $_SERVER['Authorization'];
         }
-    
         if (!empty($authorizationHeader)) {
             // Extract the token from the Authorization header (assuming it's in the "Bearer <token>" format)
             // You can further process the header to extract and validate the token as needed.

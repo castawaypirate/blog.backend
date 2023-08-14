@@ -112,10 +112,10 @@ class UserController extends BaseController
         }
     }
 
-    public function validateUser($request)
+    public function validateUser()
     {
         $jwtMiddleware = new JWTMiddleware(JWTHelper::getSecretKey());
-        $result = $jwtMiddleware->validateToken($request);
+        $result = $jwtMiddleware->validateToken();
         return $result;
     }
     // You can implement logout and token refresh methods here (optional).

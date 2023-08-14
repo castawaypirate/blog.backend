@@ -19,6 +19,7 @@ header('Content-Type: application/json');
 
 require_once('app/controllers/UserController.php');
 require_once('app/middleware/JwtMiddleware.php');
+require_once('app/controllers/PostController.php');
 require_once('app/db/database.php');
 
 $database = new Database();
@@ -26,12 +27,12 @@ $dbConnection = $database->getConnection();
 
 $routes = [];
 route('/', function () {
-    echo "Hello World!";
+    echo 'Hello World';
 });
 
 route('/api/users/login', function () use ($dbConnection){
     error_log('login');
-    $request = validateJSONRequest("POST");
+    $request = validateRequest('POST');
     $userController = new UserController($dbConnection);
     $result = $userController->login($request);
     $jsonResult = json_encode($result);
@@ -40,7 +41,7 @@ route('/api/users/login', function () use ($dbConnection){
 });
 
 route('/api/users/register', function () use ($dbConnection){
-    $request = validateJSONRequest("POST");
+    $request = validateRequest('POST');
     $userController = new UserController($dbConnection);
     $result = $userController->register($request);
     $jsonResult = json_encode($result);
@@ -49,7 +50,7 @@ route('/api/users/register', function () use ($dbConnection){
 });
 
 route('/api/users/access', function () use ($dbConnection){
-    $request = validateJSONRequest("POST");
+    $request = validateRequest('POST');
     $userController = new UserController($dbConnection);
     $result = $userController->access($request);
     $jsonResult = json_encode($result);
@@ -58,9 +59,67 @@ route('/api/users/access', function () use ($dbConnection){
 });
 
 route('/api/users/validateUser', function () use ($dbConnection){
-    $request = validateJSONRequest("GET");
-    $userController = new UserController($dbConnection);
-    $result = $userController->validateUser($request);
+    $validated = validateRequest('GET');
+    if($validated) {
+        $userController = new UserController($dbConnection);
+        $result = $userController->validateUser();
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
+route('/api/posts/showPosts', function () use ($dbConnection) {
+    $validated = validateRequest('GET');
+    if($validated){
+        $postController = new PostController($dbConnection);
+        $result = $postController->showPosts();
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+    
+});
+
+route('/api/posts/showPost', function () use ($dbConnection) {
+    $validated = validateRequest('GET');
+    if($validated) {
+        $postController = new PostController($dbConnection);
+        $postId = $_GET['postId']; // Assuming you pass the postId as a query parameter
+        $result = $postController->showPost($postId);
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
+route('/api/posts/update', function () use ($dbConnection) {
+    $request = validateRequest("POST");
+    $postController = new PostController($dbConnection);
+    $postId = $request['postId'];
+    $newContent = $request['newContent'];
+    $result = $postController->updatePost($postId, $newContent);
+    $jsonResult = json_encode($result);
+    header('Content-Type: application/json; charset=utf-8');
+    echo $jsonResult;
+});
+
+route('/api/posts/create', function () use ($dbConnection) {
+    $request = validateRequest("POST");
+    $postController = new PostController($dbConnection);
+    $userId = $request['userId'];
+    $content = $request['content'];
+    $result = $postController->createPost($userId, $content);
+    $jsonResult = json_encode($result);
+    header('Content-Type: application/json; charset=utf-8');
+    echo $jsonResult;
+});
+
+route('/api/posts/delete', function () use ($dbConnection) {
+    $request = validateRequest("DELETE");
+    $postController = new PostController($dbConnection);
+    $postId = $request['postId'];
+    $result = $postController->deletePost($postId);
     $jsonResult = json_encode($result);
     header('Content-Type: application/json; charset=utf-8');
     echo $jsonResult;
@@ -96,7 +155,7 @@ function run() {
     }
 }
 
-function validateJSONRequest(string $requestMethod){
+function validateRequest(string $requestMethod){
     
     if ($_SERVER['REQUEST_METHOD'] === $requestMethod) {
         // Check the Content-Type header for JSON
@@ -118,11 +177,16 @@ function validateJSONRequest(string $requestMethod){
             http_response_code(200); // OK
             // echo json_encode(array('message' => 'Data received successfully')).PHP_EOL;
             return $data;
-        } else if (isset($_SERVER['HTTP_AUTHORIZATION']) === true && $_SERVER['REQUEST_METHOD'] === 'GET') {
-            // Handle GET requests without JSON data (You can add further validation if needed)
-            http_response_code(200); // OK
-            // echo json_encode(array('message' => 'GET request successful')).PHP_EOL;
-            return true;
+        } else if ($_SERVER['REQUEST_METHOD'] === 'GET' or $_SERVER['REQUEST_METHOD'] === 'PUT' or $_SERVER['REQUEST_METHOD'] === 'DELETE') {
+            if ( isset($_SERVER['HTTP_AUTHORIZATION']) === true) {
+                // Handle GET requests without JSON data (You can add further validation if needed)
+                http_response_code(200); // OK
+                // echo json_encode(array('message' => 'GET request successful')).PHP_EOL;
+                return true;
+            } else {
+                http_response_code(401);
+                return false;
+            }            
         } else {
             http_response_code(415); // Unsupported Media Type
             // echo json_encode(array('error' => 'Unsupported Media Type: Expecting application/json')).PHP_EOL;
