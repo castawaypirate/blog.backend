@@ -2,7 +2,6 @@
 
 class BaseController
 {
-
     public function __construct(){}
     
     /**
@@ -12,6 +11,5 @@ class BaseController
     {
         $this->sendOutput('', array('HTTP/1.1 404 Not Found'));
     }
-
 }
 ?>

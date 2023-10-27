@@ -11,28 +11,15 @@ class PostController extends BaseController
         $this->postModel = new Post($dbConnection);
     }
 
-    public function showPosts() {
-        $posts = $this->postModel->getPosts();
-        return $posts;
-    }
+    public function createPost($userId, $request) {
+        // Validate required fields
+        if (!isset($request['title']) || !isset($request['content'])) {
+            return ['success' => false, 'message' => 'Title and content are required.'];
+        }
 
-    public function showPost($postId) {
-        $post = $this->postModel->getPostById($postId);
-        return $post;
-    }
+        // Create the user in the database
+        $result = $this->postModel->createPost($userId, $request['title'], $request['content']);
 
-    public function createPost($userId, $content) {
-        $result = $this->postModel->createPost($userId, $content);
-        return $result;
-    }
-
-    public function updatePost($postId, $newContent) {
-        $result = $this->postModel->updatePost($postId, $newContent);
-        return $result;
-    }
-
-    public function deletePost($postId) {
-        $result = $this->postModel->deletePost($postId);
         return $result;
     }
 }

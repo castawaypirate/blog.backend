@@ -12,8 +12,14 @@ class User
     // Function to add a new user to the database
     public function addUser($username, $email = null, $password)
     {
+        // Validate input data
+        if (empty($username) || empty($password)) {
+            return ['success' => false, 'message' => 'Invalid input data.'];
+        }
+        // Hash the password
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
+        // Prepare the SQL statement
         $query = "INSERT INTO Users (username, email, password) VALUES (:username, :email, :password)";
         $statement = $this->dbConnection->prepare($query);
         $statement->bindParam(':username', $username, PDO::PARAM_STR);
@@ -22,11 +28,18 @@ class User
         if ($email !== null) {
             $statement->bindParam(':email', $email, PDO::PARAM_STR);
         } else {
-            // If email is not provided, set it as null in the database
             $statement->bindValue(':email', null, PDO::PARAM_NULL);
         }
 
-        return $statement->execute();
+        try {
+            if ($statement->execute()) {
+                return ['success' => true, 'message' => 'User added successfully.'];
+            } else {
+                return ['success' => false, 'message' => 'Error adding the user.'];
+            }
+        } catch (PDOException $e) {
+            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+        }
     }
 
     // Function to fetch user details by username
