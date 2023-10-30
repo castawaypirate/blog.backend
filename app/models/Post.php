@@ -35,5 +35,17 @@ class Post
             return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
         }
     }
+
+    public function getAllPosts(){
+        try {
+            $query = "SELECT * FROM Posts";
+            $statement = $this->dbConnection->prepare($query);
+            $statement->execute();
+            $posts = $statement->fetchAll(PDO::FETCH_ASSOC);
+            return $posts;
+        } catch (PDOException $e) {
+            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+        }
+    }
 }
 ?>

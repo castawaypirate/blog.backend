@@ -22,5 +22,10 @@ class PostController extends BaseController
 
         return $result;
     }
+
+    public function showAllPosts() {
+        $result = $this->postModel->getAllPosts();
+        return $result;
+    }
 }
 ?>

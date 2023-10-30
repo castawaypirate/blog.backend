@@ -50,6 +50,28 @@ route('/api/users/validateUser', function () use ($dbConnection){
     }
 });
 
+route('/api/posts/showAll', function () use ($dbConnection) {
+    if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $validated = true;           
+        } else {
+            http_response_code(405); // Method Not Allowed
+            return false; 
+        }
+    }
+    else {
+        http_response_code(415); // Unsupported Media Type
+        return false;
+    }
+    if ($validated) {
+        $postController = new PostController($dbConnection);
+        $result = $postController->showAllPosts();
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
 route('/api/posts/create', function () use ($dbConnection) {
     $request = validateRequest('POST');
     if($request){

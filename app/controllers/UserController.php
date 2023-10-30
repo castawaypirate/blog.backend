@@ -59,6 +59,5 @@ class UserController extends BaseController
         $result = $jwtMiddleware->validateToken();
         return $result;
     }
-    // Logout and token refresh methods (optional).
 }
 ?>
