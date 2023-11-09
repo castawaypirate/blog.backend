@@ -1,4 +1,6 @@
 <?php
+define('POSTS_PER_PAGE', 2);
+
 error_log($_SERVER['REQUEST_METHOD']);
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     header('Access-Control-Allow-Origin: *');
@@ -52,11 +54,12 @@ route('/api/users/validateUser', function () use ($dbConnection){
     }
 });
 
-route('/api/posts/showAll', function () use ($dbConnection) {
+route('/api/posts/getPosts', function () use ($dbConnection) {
     $request = validateRequest('GET', 'JSON', '');
     if ($request) {
+        $postsPerPage = POSTS_PER_PAGE;
         $postController = new PostController($dbConnection);
-        $result = $postController->showAllPosts();
+        $result = $postController->getPosts($postsPerPage);
         $jsonResult = json_encode($result);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
@@ -94,7 +97,7 @@ run();
 
 function run() {
     global $routes;
-    $uri = $_SERVER['REQUEST_URI'];
+    $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
     $found = false;
     foreach ($routes as $path => $callback) {
         if ($path !== $uri){
@@ -140,7 +143,7 @@ function validateRequest($requestMethod, $contentType = '', $authorization = '')
         }
     }
 
-    if ($requestMethod === 'POST') {
+    if ($requestMethod === 'POST' && $contentType === 'JSON') {
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);
         if ($data === null) {

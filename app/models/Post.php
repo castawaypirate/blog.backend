@@ -36,10 +36,13 @@ class Post
         }
     }
 
-    public function getAllPosts(){
+    public function getPosts($postsPerPage, $pageNumber){
         try {
-            $query = "SELECT * FROM Posts";
+            $offset = ($pageNumber - 1) * $postsPerPage;
+            $query = "SELECT * FROM Posts LIMIT :postsPerPage OFFSET :offset";
             $statement = $this->dbConnection->prepare($query);
+            $statement->bindParam(':postsPerPage', $postsPerPage, PDO::PARAM_INT);
+            $statement->bindParam(':offset', $offset, PDO::PARAM_INT);
             $statement->execute();
             $posts = $statement->fetchAll(PDO::FETCH_ASSOC);
             return $posts;
