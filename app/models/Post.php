@@ -39,13 +39,23 @@ class Post
     public function getPosts($postsPerPage, $pageNumber){
         try {
             $offset = ($pageNumber - 1) * $postsPerPage;
-            $query = "SELECT * FROM Posts LIMIT :postsPerPage OFFSET :offset";
+            $query = "SELECT * FROM Posts ORDER BY created_at DESC LIMIT :postsPerPage OFFSET :offset"; // Added ORDER BY statement here
             $statement = $this->dbConnection->prepare($query);
             $statement->bindParam(':postsPerPage', $postsPerPage, PDO::PARAM_INT);
             $statement->bindParam(':offset', $offset, PDO::PARAM_INT);
             $statement->execute();
             $posts = $statement->fetchAll(PDO::FETCH_ASSOC);
-            return $posts;
+    
+            // Count the total number of posts
+            $countQuery = "SELECT COUNT(*) as totalPosts FROM Posts";
+            $countStatement = $this->dbConnection->prepare($countQuery);
+            $countStatement->execute();
+            $totalPosts = $countStatement->fetch(PDO::FETCH_ASSOC)['totalPosts'];
+    
+            return [
+                'posts' => $posts,
+                'totalPosts' => $totalPosts
+            ];
         } catch (PDOException $e) {
             return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
         }

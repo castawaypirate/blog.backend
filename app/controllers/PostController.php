@@ -26,7 +26,15 @@ class PostController extends BaseController
     public function getPosts($postsPerPage) {
         $pageNumber = isset($_GET['pageNumber']) ? intval($_GET['pageNumber']) : 1;
         $result = $this->postModel->getPosts($postsPerPage, $pageNumber);
-        return $result;
+    
+        // Calculate total pages
+        $totalPages = ceil($result['totalPosts'] / $postsPerPage);
+    
+        return [
+            'posts' => $result['posts'],
+            'pageNumber' => $pageNumber,
+            'totalPages' => $totalPages
+        ];
     }
 }
 ?>
