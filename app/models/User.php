@@ -9,17 +9,16 @@ class User
         $this->dbConnection = $dbConnection;
     }
 
-    // Function to add a new user to the database
     public function addUser($username, $email = null, $password)
     {
-        // Validate input data
+        // validate input data
         if (empty($username) || empty($password)) {
             return ['success' => false, 'message' => 'Invalid input data.'];
         }
-        // Hash the password
+        // hash the password
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-        // Prepare the SQL statement
+        // prepare the SQL statement
         $query = "INSERT INTO Users (username, email, password) VALUES (:username, :email, :password)";
         $statement = $this->dbConnection->prepare($query);
         $statement->bindParam(':username', $username, PDO::PARAM_STR);
@@ -42,26 +41,21 @@ class User
         }
     }
 
+
     public function getUserByUsername($username)
     {
-        $query = "SELECT * FROM Users WHERE username = :username";
-        $statement = $this->dbConnection->prepare($query);
-        $statement->bindParam(':username', $username, PDO::PARAM_STR);
-        $statement->execute();
+        try {
+            $query = "SELECT * FROM Users WHERE username = :username";
+            $statement = $this->dbConnection->prepare($query);
+            $statement->bindParam(':username', $username, PDO::PARAM_STR);
+            $statement->execute();
 
-        return $statement->fetch(PDO::FETCH_ASSOC);
-    }
-
-    public function getUsersListByUsername($username)
-    {
-        $query = "SELECT * FROM Users WHERE username = :username";
-        $statement = $this->dbConnection->prepare($query);
-        $statement->bindParam(':username', $username, PDO::PARAM_STR);
-        $statement->execute();
-
-        $usersList = $statement->fetchAll(PDO::FETCH_ASSOC);
-
-        return $usersList;
+            return $statement->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            // handle exception
+            error_log($e->getMessage());
+            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+        }
     }
 }
 ?>

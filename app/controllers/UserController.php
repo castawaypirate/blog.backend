@@ -14,24 +14,24 @@ class UserController extends BaseController
 
     public function access($request)
     {
-        // Validate required fields
         if (!isset($request['username']) || !isset($request['password'])) {
             return ['success' => false, 'message' => 'Username and password are required.'];
         }
 
-        // Get a list of users with the particular username and see if the password matches any of them
-        $usersList = $this->userModel->getUsersListByUsername($request['username']);
+        // Get user using the username
+        $user = $this->userModel->getUserByUsername($request['username']);
 
-        if ($usersList) {
-            foreach ($usersList as $existingUser) {
-                if (password_verify($request['password'], $existingUser['password'])) {
-                    $token = JWTHelper::generateToken(['user_id' => $existingUser['id'], 'username' => $existingUser['username']]);
-                    if ($token) {
-                        return ['success' => true, 'token' => $token, 'message' => 'Logged in.'];
-                    } else {
-                        return ['success' => false, 'message' => 'Failed to generate JWT token.'];
-                    }
+        if ($user) {
+            if (password_verify($request['password'], $user['password'])) {
+                $token = JWTHelper::generateToken(['user_id' => $user['id'], 'username' => $user['username']]);
+                if ($token) {
+                    return ['success' => true, 'token' => $token, 'message' => 'Logged in.'];
+                } else {
+                    return ['success' => false, 'message' => 'Failed to generate JWT token.'];
                 }
+            }
+            else {
+                return ['success' => false, 'message' => 'Wrong password.'];
             }
         }
 

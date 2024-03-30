@@ -8,20 +8,20 @@ class Post
         $this->dbConnection = $dbConnection;
     }
 
-    public function createPost($userId, $title, $content) {
-        // Validate required fields and input data
-        if (empty($title) || empty($content)) {
-            return ['success' => false, 'message' => 'Title and content are required.'];
+    public function createPost($userId, $title, $body) {
+        // validate required fields and input data
+        if (empty($title) || empty($body)) {
+            return ['success' => false, 'message' => 'Title and body are required.'];
         }
         
-        // Insert the post into the database within a transaction
+        // insert the post into the database within a transaction
         try {
             $this->dbConnection->beginTransaction();
-            $sql = "INSERT INTO Posts (user_id, title, content) VALUES (:userId, :title, :content)";
+            $sql = "INSERT INTO Posts (user_id, title, body) VALUES (:userId, :title, :body)";
             $stmt = $this->dbConnection->prepare($sql);
             $stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
             $stmt->bindParam(':title', $title, PDO::PARAM_STR);
-            $stmt->bindParam(':content', $content, PDO::PARAM_STR);
+            $stmt->bindParam(':body', $body, PDO::PARAM_STR);
             
             if ($stmt->execute()) {
                 $this->dbConnection->commit();
@@ -46,7 +46,7 @@ class Post
             $statement->execute();
             $posts = $statement->fetchAll(PDO::FETCH_ASSOC);
     
-            // Count the total number of posts
+            // count the total number of posts
             $countQuery = "SELECT COUNT(*) as totalPosts FROM Posts";
             $countStatement = $this->dbConnection->prepare($countQuery);
             $countStatement->execute();
@@ -60,5 +60,29 @@ class Post
             return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
         }
     }
+
+    public function getPost($postId)
+    {
+        try {
+            $query = "SELECT * FROM Posts WHERE id = :postId";
+            $statement = $this->dbConnection->prepare($query);
+            $statement->bindParam(':postId', $postId, PDO::PARAM_STR);
+            $statement->execute();
+
+            $result = $statement->fetch(PDO::FETCH_ASSOC);
+            if ($result === false) {
+                // postId not found in the database
+                return ['success' => false, 'message' => 'postId not found'];
+            } else {
+                // postId found
+                return $result;
+            }
+        } catch (PDOException $e) {
+            // Log the error message and return a response indicating a database error
+            error_log($e->getMessage());
+            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+        }
+    }
+
 }
 ?>

@@ -1,22 +1,17 @@
 <?php
-define('POSTS_PER_PAGE', 2);
+define('POSTS_PER_PAGE', 14);
 
-error_log($_SERVER['REQUEST_METHOD']);
+header('Access-Control-Allow-Origin: *');
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    header('Access-Control-Allow-Origin: *');
-
-    header('Access-Control-Allow-Methods: POST, GET, DELETE, PUT, PATCH, OPTIONS');
-    header('Access-Control-Allow-Headers: Authorization, Content-Type');
-    header('Access-Control-Max-Age: 1728000');
-    header('Content-Length: 0');
-
+    header('Access-Control-Allow-Methods: *');
+    header('Access-Control-Allow-Headers: Authorization, Content-Type, X-Requested-With');
     header('Content-Type: text/plain');
 
     error_log('die');
     die();
 }
 
-header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
 
 require_once('app/controllers/UserController.php');
@@ -33,7 +28,7 @@ route('/', function () {
 });
 
 route('/api/users/access', function () use ($dbConnection){
-    $request = validateRequest('POST', 'JSON', '');
+    $request = validateRequest('POST', 'JSON', '', 'access');
     if ($request) {
         $userController = new UserController($dbConnection);
         $result = $userController->access($request);
@@ -44,7 +39,7 @@ route('/api/users/access', function () use ($dbConnection){
 });
 
 route('/api/users/validateUser', function () use ($dbConnection){
-    $validated = validateRequest('GET', '', 'Bearer');
+    $validated = validateRequest('POST', 'JSON', 'Bearer', 'validateUser');
     if($validated) {
         $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
@@ -55,7 +50,7 @@ route('/api/users/validateUser', function () use ($dbConnection){
 });
 
 route('/api/posts/getPosts', function () use ($dbConnection) {
-    $request = validateRequest('GET', 'JSON', '');
+    $request = validateRequest('GET', 'JSON', '', 'getPosts');
     if ($request) {
         $postsPerPage = POSTS_PER_PAGE;
         $postController = new PostController($dbConnection);
@@ -66,8 +61,19 @@ route('/api/posts/getPosts', function () use ($dbConnection) {
     }
 });
 
+// route('/api/posts/getPost', function () use ($dbConnection) {
+//     $request = validateRequest('GET', 'JSON', '');
+//     if ($request) {
+//         $postController = new PostController($dbConnection);
+//         $result = $postController->getPost();
+//         $jsonResult = json_encode($result);
+//         header('Content-Type: application/json; charset=utf-8');
+//         echo $jsonResult;
+//     }
+// });
+
 route('/api/posts/create', function () use ($dbConnection) {
-    $request = validateRequest('POST', 'JSON', 'Bearer');
+    $request = validateRequest('POST', 'JSON', 'Bearer', 'create');
     if($request){
         $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
@@ -114,7 +120,7 @@ function run() {
     }
 }
 
-function validateRequest($requestMethod, $contentType = '', $authorization = '') {
+function validateRequest($requestMethod, $contentType = '', $authorization = '', $endpoint = '') {
     if ($_SERVER['REQUEST_METHOD'] !== $requestMethod) {
         // Method Not Allowed
         http_response_code(405);
@@ -140,6 +146,9 @@ function validateRequest($requestMethod, $contentType = '', $authorization = '')
             //Unauthorized
             http_response_code(401);
             return false;
+        } 
+        if ($endpoint === 'validateUser') {
+            return true;
         }
     }
 
@@ -155,7 +164,9 @@ function validateRequest($requestMethod, $contentType = '', $authorization = '')
     }
 
     if ($requestMethod === 'GET') {
-        return true;
+        if ($endpoint === 'getPosts') {
+            return true;
+        }
     }
 }
 ?>
