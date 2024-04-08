@@ -17,6 +17,8 @@ class PostController extends BaseController
             return ['success' => false, 'message' => 'Title and body are required.'];
         }
 
+        error_log("test");
+
         // create the user in the database
         $result = $this->postModel->createPost($userId, $request['title'], $request['body']);
 
@@ -36,6 +38,27 @@ class PostController extends BaseController
             'totalPages' => $totalPages
         ];
     }
+
+    public function upvotePost($userId, $postId) {
+        // validate the post ID
+        if (!is_int($postId) || !filter_var($postId, FILTER_VALIDATE_INT) || $postId <= 0) {
+            return ['success' => false, 'message' => 'Invalid post ID.'];
+        }
+        // call the model method to upvote the post
+        $result = $this->postModel->upvotePost($userId, $postId);
+        return $result;
+    }
+    
+    public function downvotePost($userId, $postId) {
+        // validate the post ID
+        if (!is_int($postId) || !filter_var($postId, FILTER_VALIDATE_INT) || $postId <= 0) {
+            return ['success' => false, 'message' => 'Invalid post ID.'];
+        }
+        // call the model method to downvote the post
+        $result = $this->postModel->downvotePost($userId, $postId);
+        return $result;
+    }
+    
 
     public function getPost() {
         if(!isset($_GET['postId']) || !filter_var($_GET['postId'], FILTER_VALIDATE_INT)) {

@@ -24,10 +24,10 @@ class JWTHelper
         return JWT::encode($data, self::$secretKey, JWT_ALGORITHM);
     }
 
-    public static function validateToken($token)
+    public static function validateToken($token, $secretKey)
     {
         try {
-            return JWT::decode($token, new Key(self::$secretKey, JWT_ALGORITHM));
+            return JWT::decode($token, new Key($secretKey, JWT_ALGORITHM));
         } catch (Exception $e) {
             return false;
         }

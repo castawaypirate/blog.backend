@@ -25,7 +25,7 @@ class JWTMiddleware
             try {
                 $decodedToken = JWTHelper::validateToken($token, $this->secretKey);
                 // You can do additional validation or checks on the decoded token here if needed
-                if ($decodedToken === false){
+                if ($decodedToken === false) {
                     return ['success' => false, 'message' => 'Token validation failed.'];
                 }
                 return ['success' => true, 'user' => $decodedToken];

@@ -61,34 +61,63 @@ route('/api/posts/getPosts', function () use ($dbConnection) {
     }
 });
 
-// route('/api/posts/getPost', function () use ($dbConnection) {
-//     $request = validateRequest('GET', 'JSON', '');
-//     if ($request) {
-//         $postController = new PostController($dbConnection);
-//         $result = $postController->getPost();
-//         $jsonResult = json_encode($result);
-//         header('Content-Type: application/json; charset=utf-8');
-//         echo $jsonResult;
-//     }
-// });
-
 route('/api/posts/create', function () use ($dbConnection) {
     $request = validateRequest('POST', 'JSON', 'Bearer', 'create');
     if($request){
         $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
         $success = $result['success'];
-        if($success){
+        if($success) {
             $user = $result['user'];
             $userId = $user->user_id;
             $postController = new PostController($dbConnection);
             $result = $postController->createPost($userId, $request);
-            $jsonResult = json_encode($result);
-            header('Content-Type: application/json; charset=utf-8');
-            echo $jsonResult;
         }
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
     }
 });
+
+route('/api/posts/upvote', function () use ($dbConnection) {
+    $request = validateRequest('POST', 'JSON', 'Bearer', 'upvote');
+    if($request){
+        $userController = new UserController($dbConnection);
+        $result = $userController->validateUser();
+        $success = $result['success'];
+        if($success) {
+            $user = $result['user'];
+            $userId = $user->user_id;
+            $postId = $request['postId'];
+            $postController = new PostController($dbConnection);
+            $result = $postController->upvotePost($userId, $postId);
+        } 
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+
+});
+
+route('/api/posts/downvote', function () use ($dbConnection) {
+    $request = validateRequest('POST', 'JSON', 'Bearer', 'downvote');
+    if ($request) {
+        $userController = new UserController($dbConnection);
+        $result = $userController->validateUser();
+        $success = $result['success'];
+        if($success) {
+            $user = $result['user'];
+            $userId = $user->user_id;
+            $postId = $request['postId'];
+            $postController = new PostController($dbConnection);
+            $result = $postController->downvotePost($userId, $postId);
+        } 
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
 
 route('/404', function () {
     echo 'Page not found';
