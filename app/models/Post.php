@@ -37,11 +37,13 @@ class Post
         }
     }
     
-
     public function getPosts($postsPerPage, $pageNumber){
         try {
             $offset = ($pageNumber - 1) * $postsPerPage;
-            $sql = "SELECT * FROM Posts ORDER BY created_at DESC LIMIT :postsPerPage OFFSET :offset";
+            $sql = "SELECT Posts.*, Users.username FROM Posts 
+                    JOIN Users ON Posts.user_id = Users.id 
+                    ORDER BY Posts.created_at DESC 
+                    LIMIT :postsPerPage OFFSET :offset";
             $statement = $this->dbConnection->prepare($sql);
             $statement->bindParam(':postsPerPage', $postsPerPage, PDO::PARAM_INT);
             $statement->bindParam(':offset', $offset, PDO::PARAM_INT);
@@ -54,7 +56,6 @@ class Post
                 $countStatement = $this->dbConnection->prepare($countQuery);
                 if ($countStatement->execute()) { 
                     $totalPosts = $countStatement->fetch(PDO::FETCH_ASSOC)['totalPosts'];
-        
                     return [
                         'posts' => $posts,
                         'totalPosts' => $totalPosts
@@ -71,27 +72,31 @@ class Post
         }
     }
     
-
     public function upvotePost($userId, $postId)
     {
         $this->dbConnection->beginTransaction();
 
         try {
             // check if the user has already upvoted or downvoted the post
-            $existingVote = $this->getExistingVote($userId, $postId, 1);
+            $existingVote = $this->getExistingVote($userId, $postId);
 
             if ($existingVote === 1) {
-                return ['success' => false, 'message' => 'User already upvoted this post.'];
+                // voteType = 1 in order to delete the upvote and unvote the post
+                $this->deleteVote($userId, $postId, 1);
+                $message = ['success' => true, 'action' => 'unvote', 'message' => 'User successfully unvoted the post.'];
             } elseif ($existingVote === -1) {
-                // voteType = -1 in order to delete the downvote
+                // voteType = -1 in order to delete the downvote and upvote the post
                 $this->deleteVote($userId, $postId, -1);
+                // insert the upvote
+                $this->insertVote($userId, $postId, 1);
+                $message = ['success' => true, 'action' => 'upvote', 'message' => 'User\'s downvote was deleted. User successfully upvoted the post.'];
+            } else {
+                $this->insertVote($userId, $postId, 1);
+                $message = ['success' => true, 'action' => 'upvote', 'message' => 'User successfully upvoted the post.'];
             }
 
-            // insert the upvote
-            $this->insertVote($userId, $postId, 1);
-
             $this->dbConnection->commit();
-            return ['success' => true, 'message' => 'User successfully upvoted the post.'];
+            return $message;
         } catch (PDOException $e) {
             $this->dbConnection->rollBack();
             return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
@@ -104,26 +109,64 @@ class Post
 
         try {
             // check if the user has already upvoted or downvoted the post
-            $existingVote = $this->getExistingVote($userId, $postId, -1);
+            $existingVote = $this->getExistingVote($userId, $postId);
+
             if ($existingVote === -1) {
-                return ['success' => false, 'message' => 'User already downvoted this post.'];
+                // voteType = 1 in order to delete the upvote and unvote the post
+                $this->deleteVote($userId, $postId, -1);
+                $message = ['success' => true, 'action' => 'unvote', 'message' => 'User successfully unvoted the post.'];
             } elseif ($existingVote === 1) {
-                // voteType = 1 in order to delete the upvote
+                // voteType = 1 in order to delete the upvote and downvote the post
                 $this->deleteVote($userId, $postId, 1);
+                // insert the upvote
+                $this->insertVote($userId, $postId, -1);
+                $message = ['success' => true, 'action' => 'downvote', 'message' => 'User\'s upvote was deleted. User successfully downvoted the post.'];
+            } else {
+                $this->insertVote($userId, $postId, -1);
+                $message = ['success' => true, 'action' => 'downvote', 'message' => 'User successfully downvoted the post.'];
             }
 
-            // insert the downvote
-            $this->insertVote($userId, $postId, -1);
-
             $this->dbConnection->commit();
-            return ['success' => true, 'message' => 'User successfully downvoted the post.'];
+            return $message;
         } catch (PDOException $e) {
             $this->dbConnection->rollBack();
             return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
         }
     }
 
-    private function getExistingVote($userId, $postId, $voteType)
+
+    public function getUserVotes($userId)
+    {
+        try {
+            $sql = "SELECT post_id, vote_type FROM Votes WHERE user_id = :userId";
+            $stmt = $this->dbConnection->prepare($sql);
+
+            $stmt->execute(['userId' => $userId]);
+
+            $votes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // process the votes to separate upvotes and downvotes
+            $userVotes = [
+                'upvotes' => [],
+                'downvotes' => [],
+            ];
+
+            foreach ($votes as $vote) {
+                if ($vote['vote_type'] == 1) {
+                    $userVotes['upvotes'][] = $vote['post_id'];
+                } elseif ($vote['vote_type'] == -1) {
+                    $userVotes['downvotes'][] = $vote['post_id'];
+                }
+            }
+
+            return ['success' => true, 'data' => $userVotes];
+        } catch (PDOException $e) {
+            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+        }
+    }
+
+
+    private function getExistingVote($userId, $postId)
     {
         $checkVoteSql = "SELECT vote_type FROM Votes WHERE user_id = :userId AND post_id = :postId";
         $checkVoteStmt = $this->dbConnection->prepare($checkVoteSql);
@@ -144,7 +187,6 @@ class Post
 
         return 0;
     }
-
 
     private function deleteVote($userId, $postId, $voteType)
     {

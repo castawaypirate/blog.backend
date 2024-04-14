@@ -16,9 +16,7 @@ class PostController extends BaseController
         if (!isset($request['title']) || !isset($request['body'])) {
             return ['success' => false, 'message' => 'Title and body are required.'];
         }
-
-        error_log("test");
-
+        
         // create the user in the database
         $result = $this->postModel->createPost($userId, $request['title'], $request['body']);
 
@@ -33,6 +31,7 @@ class PostController extends BaseController
         $totalPages = ceil($result['totalPosts'] / $postsPerPage);
     
         return [
+            'success' => true,
             'posts' => $result['posts'],
             'pageNumber' => $pageNumber,
             'totalPages' => $totalPages
@@ -58,7 +57,12 @@ class PostController extends BaseController
         $result = $this->postModel->downvotePost($userId, $postId);
         return $result;
     }
-    
+
+    public function getUserVotes($userId) {
+        // call the model method to downvote the post
+        $result = $this->postModel->getUserVotes($userId);
+        return $result;
+    }
 
     public function getPost() {
         if(!isset($_GET['postId']) || !filter_var($_GET['postId'], FILTER_VALIDATE_INT)) {

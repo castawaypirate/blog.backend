@@ -96,7 +96,6 @@ route('/api/posts/upvote', function () use ($dbConnection) {
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
     }
-
 });
 
 route('/api/posts/downvote', function () use ($dbConnection) {
@@ -118,6 +117,23 @@ route('/api/posts/downvote', function () use ($dbConnection) {
     }
 });
 
+route('/api/posts/getUserVotes', function () use ($dbConnection) {
+    $request = validateRequest('GET', 'JSON', 'Bearer', 'getUserVotes');
+    if ($request) {
+        $userController = new UserController($dbConnection);
+        $result = $userController->validateUser();
+        $success = $result['success'];
+        if($success) {
+            $user = $result['user'];
+            $userId = $user->user_id;
+            $postController = new PostController($dbConnection);
+            $result = $postController->getUserVotes($userId);
+        } 
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
 
 route('/404', function () {
     echo 'Page not found';
@@ -196,6 +212,11 @@ function validateRequest($requestMethod, $contentType = '', $authorization = '',
         if ($endpoint === 'getPosts') {
             return true;
         }
+        if ($endpoint === 'getUserVotes') {
+            return true;
+        }
     }
+
+    return false;
 }
 ?>
