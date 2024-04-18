@@ -135,6 +135,17 @@ route('/api/posts/getUserVotes', function () use ($dbConnection) {
     }
 });
 
+route('/api/posts/getPost', function () use ($dbConnection) {
+    $request = validateRequest('GET', 'JSON', '', 'getPosts');
+    if ($request) {
+        $postController = new PostController($dbConnection);
+        $result = $postController->getPost();
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
 route('/404', function () {
     echo 'Page not found';
 });
@@ -213,6 +224,9 @@ function validateRequest($requestMethod, $contentType = '', $authorization = '',
             return true;
         }
         if ($endpoint === 'getUserVotes') {
+            return true;
+        }
+        if ($endpoint === 'getPost') {
             return true;
         }
     }
