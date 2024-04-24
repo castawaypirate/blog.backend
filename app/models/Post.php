@@ -257,7 +257,7 @@ class Post
                 return ['success' => false, 'message' => 'postId not found'];
             } else {
                 // postId found
-                return $result;
+                return ['success' => true, 'post' => $result];
             }
         } catch (PDOException $e) {
             // log the error message and return a response indicating a database error
