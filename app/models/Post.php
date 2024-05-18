@@ -57,11 +57,13 @@ class Post
                 if ($countStatement->execute()) { 
                     $totalPosts = $countStatement->fetch(PDO::FETCH_ASSOC)['totalPosts'];
                     return [
+                        'success' => true,
                         'posts' => $posts,
-                        'totalPosts' => $totalPosts
+                        'totalPosts' => $totalPosts,
+                        'message' => 'Everything\'s good.'
                     ];
                 } else {
-                    return ['success' => false, 'message' => 'Error fetching total post count.'];
+                    return ['success' => false, 'message' => 'Error fetching total count of posts.'];
                 }
             } else {
                 return ['success' => false, 'message' => 'Error fetching posts.'];
@@ -134,7 +136,6 @@ class Post
         }
     }
 
-
     public function getUserVotes($userId)
     {
         try {
@@ -165,6 +166,53 @@ class Post
         }
     }
 
+    public function getUserPosts($userId, $postsPerPage, $pageNumber)
+    {
+        try {
+            $offset = ($pageNumber - 1) * $postsPerPage;
+            $sql = "SELECT * FROM Posts 
+                    WHERE user_id = :userId
+                    ORDER BY created_at DESC 
+                    LIMIT :postsPerPage OFFSET :offset";
+            $statement = $this->dbConnection->prepare($sql);
+            $statement->bindParam(':userId', $userId, PDO::PARAM_INT);
+            $statement->bindParam(':postsPerPage', $postsPerPage, PDO::PARAM_INT);
+            $statement->bindParam(':offset', $offset, PDO::PARAM_INT);
+            
+            if ($statement->execute()) { 
+                $posts = $statement->fetchAll(PDO::FETCH_ASSOC);
+        
+                // count the total number of user's posts
+                $countQuery = "SELECT COUNT(*) as totalUserPosts FROM Posts WHERE user_id = :userId";
+                $countStatement = $this->dbConnection->prepare($countQuery);
+                $countStatement->bindParam(':userId', $userId, PDO::PARAM_INT);
+                if ($countStatement->execute()) { 
+                    $totalUserPosts = $countStatement->fetch(PDO::FETCH_ASSOC)['totalUserPosts'];
+                    // check if any posts were found
+                    if (count($posts) > 0) {
+                        // return success with the posts
+                        return [
+                            'success' => true, 
+                            'posts' => $posts,
+                            'totalPosts' => $totalUserPosts,
+                            'message' => 'Everything\'s good.'
+                        ];
+                    } else {
+                        // return success with a message indicating no posts were found
+                        return ['success' => true, 'message' => 'No posts found for this user.'];
+                    }
+                   
+                } else {
+                    return ['success' => false, 'message' => 'Error fetching total count of user\'s posts.'];
+                }
+            } else {
+                return ['success' => false, 'message' => 'Error fetching user\'s posts.'];
+            }
+    
+        } catch (PDOException $e) {
+            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+        }
+    }
 
     private function getExistingVote($userId, $postId)
     {
@@ -241,7 +289,6 @@ class Post
             throw new Exception('Error updating the post upvotes.');
         }
     }
-    
 
     public function getPost($postId)
     {
@@ -265,5 +312,74 @@ class Post
         }
     }
 
+    public function editPost($userId, $postId, $title, $body) {
+        try {
+            // check if the post exists and belongs to the user
+            $checkPostSql = "SELECT user_id FROM Posts WHERE id = :postId";
+            $checkPostStmt = $this->dbConnection->prepare($checkPostSql);
+            $checkPostStmt->bindParam(':postId', $postId, PDO::PARAM_INT);
+            $checkPostStmt->execute();
+        
+            $post = $checkPostStmt->fetch(PDO::FETCH_ASSOC);
+            if ($post === false) {
+                return ['success' => false, 'message' => 'Post does not exist.'];
+            }
+
+            if ($post['user_id']!== $userId) {
+                return ['success' => false, 'message' => 'You do not have permission to edit this post.'];
+            }
+        
+            // update the post
+            $updatePostSql = "UPDATE Posts SET title = :title, body = :body WHERE id = :postId";
+            $updatePostStmt = $this->dbConnection->prepare($updatePostSql);
+            $updatePostStmt->bindParam(':title', $title, PDO::PARAM_STR);
+            $updatePostStmt->bindParam(':body', $body, PDO::PARAM_STR);
+            $updatePostStmt->bindParam(':postId', $postId, PDO::PARAM_INT);
+        
+            if ($updatePostStmt->execute()) {
+                return ['success' => true, 'message' => 'Post updated successfully.'];
+            } else {
+                return ['success' => false, 'message' => 'Error updating the post.'];
+            }
+        } catch (PDOException $e) {
+            // log the error message and return a response indicating a database error
+            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+        }
+    }
+    
+
+    public function deletePost($userId, $postId)
+    {
+        try {
+            $checkPostSql = "SELECT user_id FROM Posts WHERE id = :postId";
+            $checkPostStmt = $this->dbConnection->prepare($checkPostSql);
+            $checkPostStmt->bindParam(':postId', $postId, PDO::PARAM_INT);
+            $checkPostStmt->execute();
+    
+            $post = $checkPostStmt->fetch(PDO::FETCH_ASSOC);
+            if ($post === false || $post['user_id'] !== $userId) {
+                return ['success' => false, 'message' => 'Something\'s wrong with the post ID.'];
+            }
+
+            if ($post['user_id'] !== $userId) {
+                return ['success' => false, 'message' => 'You do not have permission to delete this post.'];
+            }
+
+    
+            $deletePostSql = "DELETE FROM Posts WHERE id = :postId";
+            $deletePostStmt = $this->dbConnection->prepare($deletePostSql);
+            $deletePostStmt->bindParam(':postId', $postId, PDO::PARAM_INT);
+    
+            if ($deletePostStmt->execute()) {
+                return ['success' => true, 'message' => 'Post deleted successfully.'];
+            } else {
+                return ['success' => false, 'message' => 'Error deleting the post.'];
+            }
+        } catch (PDOException $e) {
+            // Log the error message and return a response indicating a database error
+            error_log('Database error: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+        }
+    }
 }
 ?>

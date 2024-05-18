@@ -39,8 +39,8 @@ route('/api/users/access', function () use ($dbConnection){
 });
 
 route('/api/users/validateUser', function () use ($dbConnection){
-    $validated = validateRequest('POST', 'JSON', 'Bearer', 'validateUser');
-    if($validated) {
+    $request = validateRequest('POST', 'JSON', 'Bearer', 'validateUser');
+    if($request) {
         $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
         $jsonResult = json_encode($result);
@@ -49,8 +49,8 @@ route('/api/users/validateUser', function () use ($dbConnection){
     }
 });
 
-route('/api/posts/getPosts', function () use ($dbConnection) {
-    $request = validateRequest('GET', 'JSON', '', 'getPosts');
+route('/api/posts/getDashboardPosts', function () use ($dbConnection) {
+    $request = validateRequest('GET', 'JSON', '', 'getDashboardPosts');
     if ($request) {
         $postsPerPage = POSTS_PER_PAGE;
         $postController = new PostController($dbConnection);
@@ -135,11 +135,66 @@ route('/api/posts/getUserVotes', function () use ($dbConnection) {
     }
 });
 
+route('/api/posts/getUserPosts', function () use ($dbConnection) {
+    $request = validateRequest('GET', 'JSON', 'Bearer', 'getUserPosts');
+    if ($request) {
+        $userController = new UserController($dbConnection);
+        $result = $userController->validateUser();
+        $success = $result['success'];
+        if($success) {
+            $user = $result['user'];
+            $userId = $user->user_id;
+            $postsPerPage = POSTS_PER_PAGE;
+            $postController = new PostController($dbConnection);
+            $result = $postController->getUserPosts($userId, $postsPerPage);
+        } 
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
 route('/api/posts/getPost', function () use ($dbConnection) {
-    $request = validateRequest('GET', 'JSON', '', 'getPosts');
+    $request = validateRequest('GET', 'JSON', '', 'getPost');
     if ($request) {
         $postController = new PostController($dbConnection);
         $result = $postController->getPost();
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
+route('/api/posts/edit', function () use ($dbConnection) {
+    $request = validateRequest('PUT', 'JSON', 'Bearer', 'edit');
+    if($request){
+        $userController = new UserController($dbConnection);
+        $result = $userController->validateUser();
+        $success = $result['success'];
+        if($success) {
+            $user = $result['user'];
+            $userId = $user->user_id;
+            $postController = new PostController($dbConnection);
+            $result = $postController->editPost($userId, $request);
+        }
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
+route('/api/posts/delete', function () use ($dbConnection) {
+    $request = validateRequest('DELETE', 'JSON', 'Bearer', 'deleteUserPost');
+    if ($request) {
+        $userController = new UserController($dbConnection);
+        $result = $userController->validateUser();
+        $success = $result['success'];
+        if($success) {
+            $user = $result['user'];
+            $userId = $user->user_id;
+            $postController = new PostController($dbConnection);
+            $result = $postController->deletePost($userId);
+        }
         $jsonResult = json_encode($result);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
@@ -202,7 +257,7 @@ function validateRequest($requestMethod, $contentType = '', $authorization = '',
             //Unauthorized
             http_response_code(401);
             return false;
-        } 
+        }
         if ($endpoint === 'validateUser') {
             return true;
         }
@@ -219,14 +274,34 @@ function validateRequest($requestMethod, $contentType = '', $authorization = '',
         return $data;
     }
 
+    if ($requestMethod === 'PUT' && $contentType === 'JSON') {
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+        if ($data === null) {
+            // Bad Request (Invalid JSON data)
+            http_response_code(400);
+            return false;
+        }
+        return $data;
+    }
+
     if ($requestMethod === 'GET') {
-        if ($endpoint === 'getPosts') {
+        if ($endpoint === 'getDashboardPosts') {
             return true;
         }
         if ($endpoint === 'getUserVotes') {
             return true;
         }
         if ($endpoint === 'getPost') {
+            return true;
+        }
+        if ($endpoint === 'getUserPosts') {
+            return true;
+        }
+    }
+
+    if ($requestMethod === 'DELETE') {
+        if ($endpoint === 'delete') {
             return true;
         }
     }
