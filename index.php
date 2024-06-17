@@ -17,6 +17,7 @@ header('Content-Type: application/json');
 require_once('app/controllers/UserController.php');
 require_once('app/middleware/JwtMiddleware.php');
 require_once('app/controllers/PostController.php');
+require_once('app/controllers/CommentController.php');
 require_once('app/db/database.php');
 
 $database = new Database();
@@ -184,7 +185,7 @@ route('/api/posts/edit', function () use ($dbConnection) {
 });
 
 route('/api/posts/delete', function () use ($dbConnection) {
-    $request = validateRequest('DELETE', 'JSON', 'Bearer', 'deleteUserPost');
+    $request = validateRequest('DELETE', 'JSON', 'Bearer', 'delete');
     if ($request) {
         $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
@@ -194,6 +195,129 @@ route('/api/posts/delete', function () use ($dbConnection) {
             $userId = $user->user_id;
             $postController = new PostController($dbConnection);
             $result = $postController->deletePost($userId);
+        }
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
+route('/api/comments/create', function () use ($dbConnection) {
+    $request = validateRequest('POST', 'JSON', 'Bearer', 'create');
+    if($request){
+        $userController = new UserController($dbConnection);
+        $result = $userController->validateUser();
+        $success = $result['success'];
+        if($success) {
+            $user = $result['user'];
+            $userId = $user->user_id;
+            $commentController = new CommentController($dbConnection);
+            $result = $commentController->createComment($userId, $request);
+        }
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
+route('/api/comments/getPostComments', function () use ($dbConnection) {
+    $request = validateRequest('GET', 'JSON', '', 'getPostComments');
+    if ($request) {
+        $commentController = new CommentController($dbConnection);
+        $result = $commentController->getPostComments();
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
+route('/api/comments/upvote', function () use ($dbConnection) {
+    $request = validateRequest('POST', 'JSON', 'Bearer', 'upvote');
+    if($request){
+        $userController = new UserController($dbConnection);
+        $result = $userController->validateUser();
+        $success = $result['success'];
+        if($success) {
+            $user = $result['user'];
+            $userId = $user->user_id;
+            $postId = $request['postId'];
+            $commentId = $request['commentId'];
+            $commentController = new CommentController($dbConnection);
+            $result = $commentController->upvoteComment($userId, $postId, $commentId);
+        } 
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
+route('/api/comments/downvote', function () use ($dbConnection) {
+    $request = validateRequest('POST', 'JSON', 'Bearer', 'downvote');
+    if ($request) {
+        $userController = new UserController($dbConnection);
+        $result = $userController->validateUser();
+        $success = $result['success'];
+        if($success) {
+            $user = $result['user'];
+            $userId = $user->user_id;
+            $postId = $request['postId'];
+            $commentId = $request['commentId'];
+            $commentController = new CommentController($dbConnection);
+            $result = $commentController->downvoteComment($userId, $postId, $commentId);
+        } 
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
+route('/api/comments/getUserVotes', function () use ($dbConnection) {
+    $request = validateRequest('GET', 'JSON', 'Bearer', 'getUserVotes');
+    if ($request) {
+        $userController = new UserController($dbConnection);
+        $result = $userController->validateUser();
+        $success = $result['success'];
+        if($success) {
+            $user = $result['user'];
+            $userId = $user->user_id;
+            $commentController = new CommentController($dbConnection);
+            $result = $commentController->getUserVotes($userId);
+        } 
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
+route('/api/comments/edit', function () use ($dbConnection) {
+    $request = validateRequest('PUT', 'JSON', 'Bearer', 'edit');
+    if($request){
+        $userController = new UserController($dbConnection);
+        $result = $userController->validateUser();
+        $success = $result['success'];
+        if($success) {
+            $user = $result['user'];
+            $userId = $user->user_id;
+            $commentController = new CommentController($dbConnection);
+            $result = $commentController->editComment($userId, $request);
+        }
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
+route('/api/comments/delete', function () use ($dbConnection) {
+    $request = validateRequest('DELETE', 'JSON', 'Bearer', 'delete');
+    if ($request) {
+        $userController = new UserController($dbConnection);
+        $result = $userController->validateUser();
+        $success = $result['success'];
+        if($success) {
+            $user = $result['user'];
+            $userId = $user->user_id;
+            $commentController = new CommentController($dbConnection);
+            $result = $commentController->deleteComment($userId);
         }
         $jsonResult = json_encode($result);
         header('Content-Type: application/json; charset=utf-8');
@@ -237,6 +361,7 @@ function validateRequest($requestMethod, $contentType = '', $authorization = '',
         http_response_code(405);
         return false;
     }
+
 
     if ($contentType === 'JSON') {
         if (!isset($_SERVER['CONTENT_TYPE'])){
@@ -296,6 +421,9 @@ function validateRequest($requestMethod, $contentType = '', $authorization = '',
             return true;
         }
         if ($endpoint === 'getUserPosts') {
+            return true;
+        }
+        if ($endpoint === 'getPostComments') {
             return true;
         }
     }

@@ -1,5 +1,4 @@
 <?php
-
 class User
 {
     private $dbConnection;
@@ -40,7 +39,6 @@ class User
             return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
         }
     }
-
 
     public function getUserByUsername($username)
     {

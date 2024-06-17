@@ -12,7 +12,7 @@ class Post
     public function createPost($userId, $title, $body) {
         // validate required fields and input data
         if (empty($title) || empty($body)) {
-            return ['success' => false, 'message' => 'Title and body are required.'];
+            return ['success' => false, 'message' => 'Title or body are empty.'];
         }
         
         // insert the post into the database within a transaction
@@ -37,7 +37,7 @@ class Post
         }
     }
     
-    public function getPosts($postsPerPage, $pageNumber){
+    public function getPosts($postsPerPage, $pageNumber) {
         try {
             $offset = ($pageNumber - 1) * $postsPerPage;
             $sql = "SELECT Posts.*, Users.username FROM Posts 
@@ -74,8 +74,7 @@ class Post
         }
     }
     
-    public function upvotePost($userId, $postId)
-    {
+    public function upvotePost($userId, $postId) {
         $this->dbConnection->beginTransaction();
 
         try {
@@ -105,8 +104,7 @@ class Post
         }
     }
 
-    public function downvotePost($userId, $postId)
-    {
+    public function downvotePost($userId, $postId) {
         $this->dbConnection->beginTransaction();
 
         try {
@@ -136,17 +134,16 @@ class Post
         }
     }
 
-    public function getUserVotes($userId)
-    {
+    public function getUserVotes($userId) {
         try {
-            $sql = "SELECT post_id, vote_type FROM Votes WHERE user_id = :userId";
+            $sql = "SELECT post_id, vote_type FROM PostVotes WHERE user_id = :userId";
             $stmt = $this->dbConnection->prepare($sql);
 
             $stmt->execute(['userId' => $userId]);
 
             $votes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // process the votes to separate upvotes and downvotes
+            // process the post votes to separate upvotes and downvotes
             $userVotes = [
                 'upvotes' => [],
                 'downvotes' => [],
@@ -166,8 +163,7 @@ class Post
         }
     }
 
-    public function getUserPosts($userId, $postsPerPage, $pageNumber)
-    {
+    public function getUserPosts($userId, $postsPerPage, $pageNumber) {
         try {
             $offset = ($pageNumber - 1) * $postsPerPage;
             $sql = "SELECT * FROM Posts 
@@ -214,9 +210,25 @@ class Post
         }
     }
 
-    private function getExistingVote($userId, $postId)
-    {
-        $checkVoteSql = "SELECT vote_type FROM Votes WHERE user_id = :userId AND post_id = :postId";
+    private function getExistingVote($userId, $postId) {
+        // first, check if the post_id exists in the Posts table
+        $checkPostExistsSql = "SELECT COUNT(*) FROM Posts WHERE id = :postId";
+        $checkPostExistsStmt = $this->dbConnection->prepare($checkPostExistsSql);
+        $checkPostExistsStmt->bindParam(':postId', $postId, PDO::PARAM_INT);
+
+        if (!$checkPostExistsStmt->execute()) {
+            throw new Exception('Error checking for existing post.');
+        }
+
+        $postCount = $checkPostExistsStmt->fetchColumn();
+
+        // if the post does not exist, return early
+        if ($postCount == 0) {
+            throw new Exception("Post ID does not exist.");
+        }
+
+        // then, proceed to check for the vote
+        $checkVoteSql = "SELECT vote_type FROM PostVotes WHERE user_id = :userId AND post_id = :postId";
         $checkVoteStmt = $this->dbConnection->prepare($checkVoteSql);
         $checkVoteStmt->bindParam(':userId', $userId, PDO::PARAM_INT);
         $checkVoteStmt->bindParam(':postId', $postId, PDO::PARAM_INT);
@@ -236,9 +248,9 @@ class Post
         return 0;
     }
 
-    private function deleteVote($userId, $postId, $voteType)
-    {
-        $deleteVoteSql = "DELETE FROM Votes WHERE user_id = :userId AND post_id = :postId AND vote_type = :voteType";
+
+    private function deleteVote($userId, $postId, $voteType) {
+        $deleteVoteSql = "DELETE FROM PostVotes WHERE user_id = :userId AND post_id = :postId AND vote_type = :voteType";
         $deleteVoteStmt = $this->dbConnection->prepare($deleteVoteSql);
         $deleteVoteStmt->bindParam(':userId', $userId, PDO::PARAM_INT);
         $deleteVoteStmt->bindParam(':postId', $postId, PDO::PARAM_INT);
@@ -263,9 +275,8 @@ class Post
         }
     }
 
-    private function insertVote($userId, $postId, $voteType)
-    {
-        $sql = "INSERT INTO Votes (user_id, post_id, vote_type) VALUES (:userId, :postId, :voteType)";
+    private function insertVote($userId, $postId, $voteType) {
+        $sql = "INSERT INTO PostVotes (user_id, post_id, vote_type) VALUES (:userId, :postId, :voteType)";
         $stmt = $this->dbConnection->prepare($sql);
         $stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
         $stmt->bindParam(':postId', $postId, PDO::PARAM_INT);
@@ -290,8 +301,7 @@ class Post
         }
     }
 
-    public function getPost($postId)
-    {
+    public function getPost($postId) {
         try {
             $query = "SELECT * FROM Posts WHERE id = :postId";
             $statement = $this->dbConnection->prepare($query);
@@ -320,17 +330,18 @@ class Post
             $checkPostStmt->bindParam(':postId', $postId, PDO::PARAM_INT);
             $checkPostStmt->execute();
         
+            // fetch returns false if no row is found
             $post = $checkPostStmt->fetch(PDO::FETCH_ASSOC);
-            if ($post === false) {
+            if (!$post) {
                 return ['success' => false, 'message' => 'Post does not exist.'];
             }
 
-            if ($post['user_id']!== $userId) {
+            if ($post['user_id'] !== $userId) {
                 return ['success' => false, 'message' => 'You do not have permission to edit this post.'];
             }
         
             // update the post
-            $updatePostSql = "UPDATE Posts SET title = :title, body = :body WHERE id = :postId";
+            $updatePostSql = "UPDATE Posts SET title = :title, body = :body, updated_at = CURRENT_TIMESTAMP WHERE id = :postId";
             $updatePostStmt = $this->dbConnection->prepare($updatePostSql);
             $updatePostStmt->bindParam(':title', $title, PDO::PARAM_STR);
             $updatePostStmt->bindParam(':body', $body, PDO::PARAM_STR);
@@ -348,8 +359,7 @@ class Post
     }
     
 
-    public function deletePost($userId, $postId)
-    {
+    public function deletePost($userId, $postId) {
         try {
             $checkPostSql = "SELECT user_id FROM Posts WHERE id = :postId";
             $checkPostStmt = $this->dbConnection->prepare($checkPostSql);
@@ -357,14 +367,13 @@ class Post
             $checkPostStmt->execute();
     
             $post = $checkPostStmt->fetch(PDO::FETCH_ASSOC);
-            if ($post === false || $post['user_id'] !== $userId) {
-                return ['success' => false, 'message' => 'Something\'s wrong with the post ID.'];
+            if (!$post) {
+                return ['success' => false, 'message' => 'Post does not exist.'];
             }
 
             if ($post['user_id'] !== $userId) {
                 return ['success' => false, 'message' => 'You do not have permission to delete this post.'];
             }
-
     
             $deletePostSql = "DELETE FROM Posts WHERE id = :postId";
             $deletePostStmt = $this->dbConnection->prepare($deletePostSql);
@@ -376,7 +385,7 @@ class Post
                 return ['success' => false, 'message' => 'Error deleting the post.'];
             }
         } catch (PDOException $e) {
-            // Log the error message and return a response indicating a database error
+            // log the error message and return a response indicating a database error
             error_log('Database error: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
         }

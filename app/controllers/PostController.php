@@ -83,8 +83,6 @@ class PostController extends BaseController
     }
 
     public function getPost() {
-        error_log("test");
-
         if(!isset($_GET['postId']) || !filter_var($_GET['postId'], FILTER_VALIDATE_INT)) {
             return ['success' => false, 'message' => 'Invalid or missing post ID.'];            
         }
@@ -94,7 +92,7 @@ class PostController extends BaseController
     }
 
     public function editPost($userId, $request) {
-        // validate post id from the url
+        // validate post ID from the url
         if(!isset($_GET['postId']) || !filter_var($_GET['postId'], FILTER_VALIDATE_INT)) {
             return ['success' => false, 'message' => 'Invalid or missing post ID parameter.'];            
         }
