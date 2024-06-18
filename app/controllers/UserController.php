@@ -18,7 +18,6 @@ class UserController extends BaseController
             return ['success' => false, 'message' => 'Username and password are required.'];
         }
 
-        // Get user using the username
         $user = $this->userModel->getUserByUsername($request['username']);
 
         if ($user) {
@@ -35,11 +34,9 @@ class UserController extends BaseController
             }
         }
 
-        // If user with the particular pair of username, password doesn't exist make a new user
         $result = $this->userModel->addUser($request['username'], $request['email'] ?? null, $request['password']);
 
         if ($result['success']) {
-            // Generate a JWT token
             $user = $this->userModel->getUserByUsername($request['username']);
             $token = JWTHelper::generateToken(['user_id' => $user['id'], 'username' => $user['username']]);
             

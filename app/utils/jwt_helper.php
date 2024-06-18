@@ -7,13 +7,13 @@ use Firebase\JWT\Key;
 
 class JWTHelper
 {
-    private static $secretKey = JWT_SECRET; // Replace with your own secret key
+    private static $secretKey = JWT_SECRET;
 
     public static function generateToken($data)
     {
         $tokenId = base64_encode(random_bytes(32));
         $issuedAt = time();
-        $expire = $issuedAt + JWT_EXPIRATION; // Token expires in 1 hour (adjust as needed)
+        $expire = $issuedAt + JWT_EXPIRATION; // token expires in 1 hour
 
         $data = array_merge($data, [
             'iat' => $issuedAt,

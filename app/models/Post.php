@@ -90,7 +90,7 @@ class Post
                 $this->deleteVote($userId, $postId, -1);
                 // insert the upvote
                 $this->insertVote($userId, $postId, 1);
-                $message = ['success' => true, 'action' => 'upvote', 'message' => 'User\'s downvote was deleted. User successfully upvoted the post.'];
+                $message = ['success' => true, 'action' => 'delete/upvote', 'message' => 'User\'s downvote was deleted. User successfully upvoted the post.'];
             } else {
                 $this->insertVote($userId, $postId, 1);
                 $message = ['success' => true, 'action' => 'upvote', 'message' => 'User successfully upvoted the post.'];
@@ -120,7 +120,7 @@ class Post
                 $this->deleteVote($userId, $postId, 1);
                 // insert the upvote
                 $this->insertVote($userId, $postId, -1);
-                $message = ['success' => true, 'action' => 'downvote', 'message' => 'User\'s upvote was deleted. User successfully downvoted the post.'];
+                $message = ['success' => true, 'action' => 'delete/downvote', 'message' => 'User\'s upvote was deleted. User successfully downvoted the post.'];
             } else {
                 $this->insertVote($userId, $postId, -1);
                 $message = ['success' => true, 'action' => 'downvote', 'message' => 'User successfully downvoted the post.'];
@@ -317,7 +317,6 @@ class Post
                 return ['success' => true, 'post' => $result];
             }
         } catch (PDOException $e) {
-            // log the error message and return a response indicating a database error
             return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
         }
     }
@@ -340,7 +339,6 @@ class Post
                 return ['success' => false, 'message' => 'You do not have permission to edit this post.'];
             }
         
-            // update the post
             $updatePostSql = "UPDATE Posts SET title = :title, body = :body, updated_at = CURRENT_TIMESTAMP WHERE id = :postId";
             $updatePostStmt = $this->dbConnection->prepare($updatePostSql);
             $updatePostStmt->bindParam(':title', $title, PDO::PARAM_STR);
@@ -353,7 +351,6 @@ class Post
                 return ['success' => false, 'message' => 'Error updating the post.'];
             }
         } catch (PDOException $e) {
-            // log the error message and return a response indicating a database error
             return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
         }
     }
@@ -385,7 +382,6 @@ class Post
                 return ['success' => false, 'message' => 'Error deleting the post.'];
             }
         } catch (PDOException $e) {
-            // log the error message and return a response indicating a database error
             error_log('Database error: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
         }

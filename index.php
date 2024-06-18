@@ -289,6 +289,24 @@ route('/api/comments/getUserVotes', function () use ($dbConnection) {
     }
 });
 
+route('/api/comments/getUserComments', function () use ($dbConnection) {
+    $request = validateRequest('GET', 'JSON', 'Bearer', 'getUserComments');
+    if ($request) {
+        $userController = new UserController($dbConnection);
+        $result = $userController->validateUser();
+        $success = $result['success'];
+        if($success) {
+            $user = $result['user'];
+            $userId = $user->user_id;
+            $commentController = new CommentController($dbConnection);
+            $result = $commentController->getUserComments($userId);
+        } 
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
 route('/api/comments/edit', function () use ($dbConnection) {
     $request = validateRequest('PUT', 'JSON', 'Bearer', 'edit');
     if($request){
@@ -362,7 +380,6 @@ function validateRequest($requestMethod, $contentType = '', $authorization = '',
         return false;
     }
 
-
     if ($contentType === 'JSON') {
         if (!isset($_SERVER['CONTENT_TYPE'])){
             // Bad Request
@@ -424,6 +441,9 @@ function validateRequest($requestMethod, $contentType = '', $authorization = '',
             return true;
         }
         if ($endpoint === 'getPostComments') {
+            return true;
+        }
+        if ($endpoint === 'getUserComments') {
             return true;
         }
     }

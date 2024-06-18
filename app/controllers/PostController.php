@@ -12,7 +12,6 @@ class PostController extends BaseController
     }
 
     public function createPost($userId, $request) {
-        // validate required fields
         if (!isset($request['title']) || !isset($request['body'])) {
             return ['success' => false, 'message' => 'Title and body are required.'];
         }
@@ -26,7 +25,6 @@ class PostController extends BaseController
         $pageNumber = $pageNumber <= 0? 1 : $pageNumber;
         $result = $this->postModel->getPosts($postsPerPage, $pageNumber);
     
-        // calculate total pages
         $totalPages = ceil($result['totalPosts'] / $postsPerPage);
     
         return [
@@ -39,21 +37,17 @@ class PostController extends BaseController
     }
 
     public function upvotePost($userId, $postId) {
-        // validate the post ID
         if (!is_int($postId) || !filter_var($postId, FILTER_VALIDATE_INT) || $postId <= 0) {
             return ['success' => false, 'message' => 'Invalid post ID.'];
         }
-        // call the model method to upvote the post
         $result = $this->postModel->upvotePost($userId, $postId);
         return $result;
     }
     
     public function downvotePost($userId, $postId) {
-        // validate the post ID
         if (!is_int($postId) || !filter_var($postId, FILTER_VALIDATE_INT) || $postId <= 0) {
             return ['success' => false, 'message' => 'Invalid post ID.'];
         }
-        // call the model method to downvote the post
         $result = $this->postModel->downvotePost($userId, $postId);
         return $result;
     }
@@ -92,11 +86,9 @@ class PostController extends BaseController
     }
 
     public function editPost($userId, $request) {
-        // validate post ID from the url
         if(!isset($_GET['postId']) || !filter_var($_GET['postId'], FILTER_VALIDATE_INT)) {
             return ['success' => false, 'message' => 'Invalid or missing post ID parameter.'];            
         }
-        // validate title and body from the request body
         if (!isset($request['title']) || !isset($request['body'])) {
             return ['success' => false, 'message' => 'Title and body are required.'];
         }

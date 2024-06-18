@@ -19,12 +19,10 @@ class JWTMiddleware
             $authorizationHeader = $_SERVER['HTTP_AUTHORIZATION'];
         }
         if (!empty($authorizationHeader)) {
-            // Extract the token from the Authorization header (assuming it's in the 'Bearer <token>' format)
-            // You can further process the header to extract and validate the token as needed.
+            // extract the token from the Authorization header (assuming it's in the 'Bearer <token>' format)
             $token = str_replace('Bearer ', '', $authorizationHeader);
             try {
                 $decodedToken = JWTHelper::validateToken($token, $this->secretKey);
-                // You can do additional validation or checks on the decoded token here if needed
                 if ($decodedToken === false) {
                     return ['success' => false, 'message' => 'Token validation failed.'];
                 }
@@ -32,9 +30,7 @@ class JWTMiddleware
             } catch (Exception $e) {
                 return ['success' => false, 'message' => 'Token validation failed.'];
             }
-            // You can now use the $token variable for further processing or validation.
         } else {
-            // Handle the case when the Authorization header is not present.
             return ['success' => false, 'message' => 'Authorization header not found.'];
         }
     }

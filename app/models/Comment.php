@@ -11,7 +11,6 @@ class Comment
     }
 
     public function createComment($userId, $postId, $body) {
-        // validate required fields and input data
         if (empty($postId)) {
             return ['success' => false, 'message' => 'Post ID is empty.'];
         }
@@ -19,7 +18,6 @@ class Comment
             return ['success' => false, 'message' => 'Body is empty.'];
         }
         
-        // insert the post into the database within a transaction
         try {
             $this->dbConnection->beginTransaction();
             $checkPostSql = "SELECT * FROM Posts WHERE id = :postId";
@@ -52,12 +50,10 @@ class Comment
     }
 
     public function getPostComments($postId) {
-        // validate postId
         if (empty($postId)) {
             return ['success' => false, 'message' => 'Post ID is empty.'];
         }
         
-        // insert the post into the database within a transaction
         try {
             $sql = "SELECT Comments.*, Users.username 
                     FROM Comments 
@@ -67,7 +63,6 @@ class Comment
 
             $statement = $this->dbConnection->prepare($sql);
             $statement->bindParam(':postId', $postId, PDO::PARAM_INT);
-
             
             if ($statement->execute()) { 
                 $results = $statement->fetchAll(PDO::FETCH_ASSOC);
@@ -90,7 +85,7 @@ class Comment
         $this->dbConnection->beginTransaction();
 
         try {
-            // check if the user has already upvoted or downvoted the post
+            // check if the user has already upvoted or downvoted the comment
             $existingVote = $this->getExistingVote($userId, $postId, $commentId);
 
             if ($existingVote === 1) {
@@ -102,7 +97,7 @@ class Comment
                 $this->deleteVote($userId, $commentId, -1);
                 // insert the upvote
                 $this->insertVote($userId, $commentId, 1);
-                $message = ['success' => true, 'action' => 'upvote', 'message' => 'User\'s downvote was deleted. User successfully upvoted the comment.'];
+                $message = ['success' => true, 'action' => 'delete/upvote', 'message' => 'User\'s downvote was deleted. User successfully upvoted the comment.'];
             } else {
                 $this->insertVote($userId, $commentId, 1);
                 $message = ['success' => true, 'action' => 'upvote', 'message' => 'User successfully upvoted the comment.'];
@@ -132,7 +127,7 @@ class Comment
                 $this->deleteVote($userId, $commentId, 1);
                 // insert the upvote
                 $this->insertVote($userId, $commentId, -1);
-                $message = ['success' => true, 'action' => 'downvote', 'message' => 'User\'s upvote was deleted. User successfully downvoted the comment.'];
+                $message = ['success' => true, 'action' => 'delete/downvote', 'message' => 'User\'s upvote was deleted. User successfully downvoted the comment.'];
             } else {
                 $this->insertVote($userId, $commentId, -1);
                 $message = ['success' => true, 'action' => 'downvote', 'message' => 'User successfully downvoted the comment.'];
@@ -147,7 +142,7 @@ class Comment
     }
 
     private function getExistingVote($userId, $postId, $commentId) {
-        // first, check if the post_id exists in the Posts table
+        // first, check if the comment with these postId and commentId exists in the Comments table
         $checkCommentExistsSql = "SELECT COUNT(*) FROM Comments WHERE id = :commentId AND post_id = :postId";
         $checkCommentExistsStmt = $this->dbConnection->prepare($checkCommentExistsSql);
         $checkCommentExistsStmt->bindParam(':commentId', $commentId, PDO::PARAM_INT);
@@ -159,7 +154,7 @@ class Comment
 
         $commentCount = $checkCommentExistsStmt->fetchColumn();
 
-        // if the post does not exist, return early
+        // if the comment does not exist, return early
         if ($commentCount == 0) {
             throw new Exception("Comment ID or Post ID does not exist.");
         }
@@ -267,6 +262,31 @@ class Comment
         }
     }
 
+    public function getUserComments($userId, $postId) {
+        if (empty($postId)) {
+            return ['success' => false, 'message' => 'Post ID is empty.'];
+        }
+        try {
+            $sql = "SELECT id FROM Comments WHERE user_id = :userId AND post_id = :postId";
+            $stmt = $this->dbConnection->prepare($sql);
+
+            $stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':postId', $postId, PDO::PARAM_INT);
+
+            if ($stmt->execute()) {
+                $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+                $ids = array_column($comments, 'id');
+                
+                return ['success' => true, 'data' => $ids];
+            } else {
+                return ['success' => false, 'message' => 'Error executing query.'];
+            }
+        } catch (PDOException $e) {
+            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+        }
+    }
+
     public function editComment($userId, $commentId, $postId, $body) {
         try {
             // check if the comment exists and belongs to the user
@@ -285,7 +305,6 @@ class Comment
                 return ['success' => false, 'message' => 'You do not have permission to edit this post.'];
             }
         
-            // update the comment
             $updateCommentSql = "UPDATE Comments SET body = :body, updated_at = CURRENT_TIMESTAMP WHERE id = :commentId AND post_id = :postId";
             $updateCommentStmt = $this->dbConnection->prepare($updateCommentSql);
             $updateCommentStmt->bindParam(':body', $body, PDO::PARAM_STR);
@@ -298,7 +317,6 @@ class Comment
                 return ['success' => false, 'message' => 'Error updating the comment.'];
             }
         } catch (PDOException $e) {
-            // log the error message and return a response indicating a database error
             return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
         }
     }
@@ -330,7 +348,6 @@ class Comment
                 return ['success' => false, 'message' => 'Error deleting the comment.'];
             }
         } catch (PDOException $e) {
-            // log the error message and return a response indicating a database error
             error_log('Database error: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
         }

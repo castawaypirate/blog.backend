@@ -10,14 +10,12 @@ class User
 
     public function addUser($username, $email = null, $password)
     {
-        // validate input data
         if (empty($username) || empty($password)) {
             return ['success' => false, 'message' => 'Invalid input data.'];
         }
         // hash the password
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-        // prepare the SQL statement
         $query = "INSERT INTO Users (username, email, password) VALUES (:username, :email, :password)";
         $statement = $this->dbConnection->prepare($query);
         $statement->bindParam(':username', $username, PDO::PARAM_STR);

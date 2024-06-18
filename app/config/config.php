@@ -5,11 +5,11 @@ require_once ROOT_DIR.'/vendor/autoload.php';
 
 use Dotenv\Dotenv;
 
-// Load the .env file
+// load the .env file
 $dotenv = Dotenv::createImmutable(ROOT_DIR);
 $dotenv->load();
 
-// Database Configuration
+// database configuration
 define('DB_HOST', $_ENV['DB_HOST']);
 define('DB_USERNAME', $_ENV['DB_USERNAME']);
 define('DB_PASSWORD', $_ENV['DB_PASSWORD']);

@@ -12,7 +12,6 @@ class CommentController extends BaseController
     }
 
     public function createComment($userId, $request) {
-        // validate required fields
         if (!isset($request['postId'])) {
             return ['success' => false, 'message' => 'Post ID is required.'];
         }
@@ -34,29 +33,23 @@ class CommentController extends BaseController
     }
 
     public function upvoteComment($userId, $postId, $commentId) {
-        // validate the post ID
         if (!is_int($postId) || !filter_var($postId, FILTER_VALIDATE_INT) || $postId <= 0) {
             return ['success' => false, 'message' => 'Invalid post ID.'];
         }
-        // validate the comment ID
         if (!is_int($commentId) || !filter_var($commentId, FILTER_VALIDATE_INT) || $commentId <= 0) {
             return ['success' => false, 'message' => 'Invalid comment ID.'];
         }
-        // call the model method to upvote the post
         $result = $this->commentModel->upvoteComment($userId, $postId, $commentId);
         return $result;
     }
 
     public function downvoteComment($userId, $postId, $commentId) {
-        // validate the post ID
         if (!is_int($postId) || !filter_var($postId, FILTER_VALIDATE_INT) || $postId <= 0) {
             return ['success' => false, 'message' => 'Invalid post ID.'];
         }
-        // validate the comment ID
         if (!is_int($commentId) || !filter_var($commentId, FILTER_VALIDATE_INT) || $commentId <= 0) {
             return ['success' => false, 'message' => 'Invalid comment ID.'];
         }
-        // call the model method to upvote the post
         $result = $this->commentModel->downvoteComment($userId, $postId, $commentId);
         return $result;
     }
@@ -65,17 +58,23 @@ class CommentController extends BaseController
         $result = $this->commentModel->getUserVotes($userId);
         return $result;
     }
+
+    public function getUserComments($userId) {
+        if(!isset($_GET['postId']) || !filter_var($_GET['postId'], FILTER_VALIDATE_INT)) {
+            return ['success' => false, 'message' => 'Invalid or missing post ID.'];            
+        }
+        $postId = $_GET['postId'];
+        $result = $this->commentModel->getUserComments($userId, $postId);
+        return $result;
+    }
     
     public function editComment($userId, $request) {
-        // validate comment ID from the url
         if(!isset($_GET['commentId']) || !filter_var($_GET['commentId'], FILTER_VALIDATE_INT)) {
             return ['success' => false, 'message' => 'Invalid or missing comment ID parameter.'];            
         }
-        // validate post ID from the request body
         if (!is_int($request['postId']) || !filter_var($request['postId'], FILTER_VALIDATE_INT) || $request['postId'] <= 0) {
             return ['success' => false, 'message' => 'Invalid post ID.'];
         }
-        // validate  and body from the request body
         if (!isset($request['body'])) {
             return ['success' => false, 'message' => 'Title and body are required.'];
         }
