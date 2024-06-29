@@ -6,8 +6,7 @@ class CommentController extends BaseController
 {
     private $commentModel;
 
-    public function __construct($dbConnection)
-    {
+    public function __construct($dbConnection) {
         $this->commentModel = new Comment($dbConnection);
     }
 
@@ -76,7 +75,7 @@ class CommentController extends BaseController
             return ['success' => false, 'message' => 'Invalid post ID.'];
         }
         if (!isset($request['body'])) {
-            return ['success' => false, 'message' => 'Title and body are required.'];
+            return ['success' => false, 'message' => 'Body is required.'];
         }
         
         $commentId = $_GET['commentId'];

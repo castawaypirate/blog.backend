@@ -36,6 +36,10 @@ route('/api/users/access', function () use ($dbConnection){
         $jsonResult = json_encode($result);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
     }
 });
 
@@ -45,6 +49,10 @@ route('/api/users/validateUser', function () use ($dbConnection){
         $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
         $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
     }
@@ -57,6 +65,10 @@ route('/api/posts/getDashboardPosts', function () use ($dbConnection) {
         $postController = new PostController($dbConnection);
         $result = $postController->getPosts($postsPerPage);
         $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
     }
@@ -74,7 +86,13 @@ route('/api/posts/create', function () use ($dbConnection) {
             $postController = new PostController($dbConnection);
             $result = $postController->createPost($userId, $request);
         }
+        // this is outside the if, so if $success is false, it will return the $result from token validation
+        // otherwise, it will return the $result of the controller function.
         $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
     }
@@ -92,8 +110,12 @@ route('/api/posts/upvote', function () use ($dbConnection) {
             $postId = $request['postId'];
             $postController = new PostController($dbConnection);
             $result = $postController->upvotePost($userId, $postId);
-        } 
+        }
         $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
     }
@@ -111,8 +133,12 @@ route('/api/posts/downvote', function () use ($dbConnection) {
             $postId = $request['postId'];
             $postController = new PostController($dbConnection);
             $result = $postController->downvotePost($userId, $postId);
-        } 
+        }
         $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
     }
@@ -129,8 +155,12 @@ route('/api/posts/getUserVotes', function () use ($dbConnection) {
             $userId = $user->user_id;
             $postController = new PostController($dbConnection);
             $result = $postController->getUserVotes($userId);
-        } 
+        }
         $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
     }
@@ -148,8 +178,12 @@ route('/api/posts/getUserPosts', function () use ($dbConnection) {
             $postsPerPage = POSTS_PER_PAGE;
             $postController = new PostController($dbConnection);
             $result = $postController->getUserPosts($userId, $postsPerPage);
-        } 
+        }
         $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
     }
@@ -161,6 +195,10 @@ route('/api/posts/getPost', function () use ($dbConnection) {
         $postController = new PostController($dbConnection);
         $result = $postController->getPost();
         $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
     }
@@ -181,6 +219,10 @@ route('/api/posts/edit', function () use ($dbConnection) {
         $jsonResult = json_encode($result);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
     }
 });
 
@@ -197,6 +239,10 @@ route('/api/posts/delete', function () use ($dbConnection) {
             $result = $postController->deletePost($userId);
         }
         $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
     }
@@ -217,6 +263,10 @@ route('/api/comments/create', function () use ($dbConnection) {
         $jsonResult = json_encode($result);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
     }
 });
 
@@ -226,6 +276,10 @@ route('/api/comments/getPostComments', function () use ($dbConnection) {
         $commentController = new CommentController($dbConnection);
         $result = $commentController->getPostComments();
         $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
     }
@@ -244,8 +298,12 @@ route('/api/comments/upvote', function () use ($dbConnection) {
             $commentId = $request['commentId'];
             $commentController = new CommentController($dbConnection);
             $result = $commentController->upvoteComment($userId, $postId, $commentId);
-        } 
+        }
         $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
     }
@@ -264,8 +322,12 @@ route('/api/comments/downvote', function () use ($dbConnection) {
             $commentId = $request['commentId'];
             $commentController = new CommentController($dbConnection);
             $result = $commentController->downvoteComment($userId, $postId, $commentId);
-        } 
+        }
         $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
     }
@@ -282,8 +344,12 @@ route('/api/comments/getUserVotes', function () use ($dbConnection) {
             $userId = $user->user_id;
             $commentController = new CommentController($dbConnection);
             $result = $commentController->getUserVotes($userId);
-        } 
+        }
         $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
     }
@@ -300,8 +366,12 @@ route('/api/comments/getUserComments', function () use ($dbConnection) {
             $userId = $user->user_id;
             $commentController = new CommentController($dbConnection);
             $result = $commentController->getUserComments($userId);
-        } 
+        }
         $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
     }
@@ -322,6 +392,10 @@ route('/api/comments/edit', function () use ($dbConnection) {
         $jsonResult = json_encode($result);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
     }
 });
 
@@ -338,6 +412,171 @@ route('/api/comments/delete', function () use ($dbConnection) {
             $result = $commentController->deleteComment($userId);
         }
         $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
+route('/api/users/getUserData', function () use ($dbConnection) {
+    $request = validateRequest('GET', 'JSON', 'Bearer', 'getUserData');
+    if($request){
+        $userController = new UserController($dbConnection);
+        $result = $userController->validateUser();
+        $success = $result['success'];
+        if($success) {
+            $user = $result['user'];
+            $userId = $user->user_id;
+            $result = $userController->getUserData($userId);
+        }
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
+route('/api/users/uploadProfilePic', function () use ($dbConnection) {
+    $request = validateRequest('POST', 'FORM_DATA', 'Bearer', 'uploadProfilePic');
+    if ($request) {
+        $userController = new UserController($dbConnection);
+        $result = $userController->validateUser();
+        $success = $result['success'];
+        if($success) {
+            $user = $result['user'];
+            $userId = $user->user_id;
+            $result = $userController->uploadProfilePic($userId);
+        }
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
+route('/api/users/getProfilePic', function () use ($dbConnection) {
+    $request = validateRequest('GET', '', 'Bearer', 'getProfilePic');
+    if ($request) {
+        $userController = new UserController($dbConnection);
+        $result = $userController->validateUser();
+        $success = $result['success'];
+        if($success) {
+            $user = $result['user'];
+            $userId = $user->user_id;
+            $result = $userController->getProfilePic($userId);
+
+            if ($result['success']) {
+                $data = $result['data'];
+                $profilePicFullPath = $data['profile_pic_full_path'];
+                $profilePicMimeType = $data['profile_pic_mime_type'];
+                header('Content-Type: '. $profilePicMimeType);
+                // header('Content-Disposition: inline');
+                readfile($profilePicFullPath);
+            } else {
+                $jsonResult = json_encode($result);
+                header('Content-Type: application/json; charset=utf-8');
+                echo $jsonResult;
+            }
+        } else {
+            $jsonResult = json_encode(['success' => false, 'message' => 'Token validaton failed.']);
+            header('Content-Type: application/json; charset=utf-8');
+            echo $jsonResult;
+        }
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
+route('/api/users/deleteProfilePic', function () use ($dbConnection) {
+    $request = validateRequest('DELETE', '', 'Bearer', 'deleteProfilePic');
+    if ($request) {
+        $userController = new UserController($dbConnection);
+        $result = $userController->validateUser();
+        $success = $result['success'];
+        if($success) {
+            $user = $result['user'];
+            $userId = $user->user_id;
+            $result = $userController->deleteProfilePic($userId);
+        }
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
+route('/api/users/changeUsername', function () use ($dbConnection) {
+    $request = validateRequest('PUT', 'JSON', 'Bearer', 'changeUsername');
+    if($request){
+        $userController = new UserController($dbConnection);
+        $result = $userController->validateUser();
+        $success = $result['success'];
+        if($success) {
+            $user = $result['user'];
+            $userId = $user->user_id;
+            $result = $userController->changeUsername($userId, $request);
+        }
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
+route('/api/users/changePassword', function () use ($dbConnection) {
+    $request = validateRequest('PUT', 'JSON', 'Bearer', 'changePassword');
+    if($request){
+        $userController = new UserController($dbConnection);
+        $result = $userController->validateUser();
+        $success = $result['success'];
+        if($success) {
+            $user = $result['user'];
+            $userId = $user->user_id;
+            $result = $userController->changePassword($userId, $request);
+        }
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
+route('/api/users/delete', function () use ($dbConnection) {
+    $request = validateRequest('DELETE', '', 'Bearer', 'delete');
+    if ($request) {
+        $userController = new UserController($dbConnection);
+        $result = $userController->validateUser();
+        $success = $result['success'];
+        if($success) {
+            $user = $result['user'];
+            $userId = $user->user_id;
+            $result = $userController->deleteUser($userId);
+        }
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
     }
@@ -446,10 +685,40 @@ function validateRequest($requestMethod, $contentType = '', $authorization = '',
         if ($endpoint === 'getUserComments') {
             return true;
         }
+        if ($endpoint === 'getUserData') {
+            return true;
+        }
+        if ($endpoint === 'getProfilePic') {
+            return true;
+        }
+    }
+
+    if ($requestMethod === 'POST') {
+        if ($endpoint === 'uploadProfilePic') {
+            if ($contentType === 'FORM_DATA') {
+                if (!isset($_SERVER['CONTENT_TYPE'])){
+                    // Bad Request
+                    http_response_code(400);
+                    return false;
+                } else {
+                    // === 0 ensures that multipart/form-data is found at the beginning
+                    if (strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') === 0) {
+                        return true;
+                    } else {
+                        // Unsupported Media Type
+                        http_response_code(415);
+                        return false;
+                    }
+                }
+            }
+        }
     }
 
     if ($requestMethod === 'DELETE') {
         if ($endpoint === 'delete') {
+            return true;
+        }
+        if ($endpoint === 'deleteProfilePic') {
             return true;
         }
     }

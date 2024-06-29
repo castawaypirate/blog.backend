@@ -3,8 +3,7 @@ class Post
 {
     private $dbConnection;
 
-    public function __construct($dbConnection)
-    {
+    public function __construct($dbConnection) {
         $this->dbConnection = $dbConnection;
         $this->dbConnection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
