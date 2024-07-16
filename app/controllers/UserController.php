@@ -150,7 +150,7 @@ class UserController extends BaseController
         }
     }
 
-    public function deletePost($userId) {
+    public function deleteUser($userId) {
         $result = $this->userModel->deleteUser($userId);
         return $result;
     }

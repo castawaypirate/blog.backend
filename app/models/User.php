@@ -1,30 +1,34 @@
 <?php
+
+require_once __DIR__.'/../config/config.php';
+
 class User
 {
     private $dbConnection;
+    private static $userDeletionDelay = USER_DELETION_DELAY;
 
     public function __construct($dbConnection) {
         $this->dbConnection = $dbConnection;
     }
 
     public function addUser($username, $email = null, $password) {
-        if (empty($username) || empty($password)) {
-            return ['success' => false, 'message' => 'Invalid input data.'];
-        }
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-        $query = "INSERT INTO Users (username, email, password) VALUES (:username, :email, :password)";
-        $statement = $this->dbConnection->prepare($query);
-        $statement->bindParam(':username', $username, PDO::PARAM_STR);
-        $statement->bindParam(':password', $hashedPassword, PDO::PARAM_STR);
-
-        if ($email !== null) {
-            $statement->bindParam(':email', $email, PDO::PARAM_STR);
-        } else {
-            $statement->bindValue(':email', null, PDO::PARAM_NULL);
-        }
-
         try {
+            if (empty($username) || empty($password)) {
+                return ['success' => false, 'message' => 'Invalid input data.'];
+            }
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+            $query = "INSERT INTO Users (username, email, password) VALUES (:username, :email, :password)";
+            $statement = $this->dbConnection->prepare($query);
+            $statement->bindParam(':username', $username, PDO::PARAM_STR);
+            $statement->bindParam(':password', $hashedPassword, PDO::PARAM_STR);
+
+            if ($email !== null) {
+                $statement->bindParam(':email', $email, PDO::PARAM_STR);
+            } else {
+                $statement->bindValue(':email', null, PDO::PARAM_NULL);
+            }
+
             if ($statement->execute()) {
                 return ['success' => true, 'message' => 'User added successfully.'];
             } else {
@@ -48,6 +52,11 @@ class User
                 $updateStatement = $this->dbConnection->prepare($updateQuery);
                 $updateStatement->bindParam(':id', $user['id'], PDO::PARAM_INT);
                 $updateStatement->execute();
+
+                $updateDeletedAtQuery = "UPDATE Users SET deleted_at = NULL WHERE id = :id";
+                $updateDeletedAtStatement = $this->dbConnection->prepare($updateDeletedAtQuery);
+                $updateDeletedAtStatement->bindParam(':id', $user['id'], PDO::PARAM_INT);
+                $updateDeletedAtStatement->execute();
             }
 
             return $user;
@@ -307,21 +316,25 @@ class User
     }
 
     public function deleteUser($userId) {
-        $uploads = ROOT_DIR.'/uploads/';
-        // try {
-        //     $deletePostSql = "DELETE FROM Posts WHERE id = :postId";
-        //     $deletePostStmt = $this->dbConnection->prepare($deletePostSql);
-        //     $deletePostStmt->bindParam(':postId', $postId, PDO::PARAM_INT);
+        try {
+            $currentTimestamp = new DateTime();
+            $deletionTimestamp = $currentTimestamp->add(new DateInterval('PT' . self::$userDeletionDelay . 'S'))->format('Y-m-d H:i:s');
+            
+            $updateDeletedAtSql = "UPDATE Users SET deleted_at = :deletionTimestamp WHERE id = :userId";
+            $updateDeletedAtStmt = $this->dbConnection->prepare($updateDeletedAtSql);
     
-        //     if ($deletePostStmt->execute()) {
-        //         return ['success' => true, 'message' => 'Post deleted successfully.'];
-        //     } else {
-        //         return ['success' => false, 'message' => 'Error deleting the post.'];
-        //     }
-        // } catch (PDOException $e) {
-        //     error_log('Database error: ' . $e->getMessage());
-        //     return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
-        // }
+            $updateDeletedAtStmt->bindParam(':deletionTimestamp', $deletionTimestamp, PDO::PARAM_INT);
+            $updateDeletedAtStmt->bindParam(':userId', $userId, PDO::PARAM_INT);
+    
+            if ($updateDeletedAtStmt->execute()) {
+                return ['success' => true, 'message' => 'User marked as deleted successfully.'];
+            } else {
+                return ['success' => false, 'message' => 'Failed to mark user as deleted.'];
+            }
+        } catch (PDOException $e) {
+            error_log('Database error: '.$e->getMessage());
+            return ['success' => false, 'message' => 'Database error: '.$e->getMessage()];
+        }
     }
 }
 ?>

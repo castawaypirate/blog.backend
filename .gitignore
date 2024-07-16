@@ -17,3 +17,5 @@ Thumbs.db
 
 # Local development files and configurations (optional, add if needed)
 .env
+
+/uploads/

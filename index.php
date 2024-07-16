@@ -562,7 +562,7 @@ route('/api/users/changePassword', function () use ($dbConnection) {
 });
 
 route('/api/users/delete', function () use ($dbConnection) {
-    $request = validateRequest('DELETE', '', 'Bearer', 'delete');
+    $request = validateRequest('PUT', '', 'Bearer', 'delete');
     if ($request) {
         $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
@@ -711,6 +711,12 @@ function validateRequest($requestMethod, $contentType = '', $authorization = '',
                     }
                 }
             }
+        }
+    }
+
+    if ($requestMethod === 'PUT') {
+        if ($endpoint === 'delete') {
+            return true;
         }
     }
 
