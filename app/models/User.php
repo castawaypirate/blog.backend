@@ -53,6 +53,7 @@ class User
                 $updateStatement->bindParam(':id', $user['id'], PDO::PARAM_INT);
                 $updateStatement->execute();
 
+                // undo user deletion if the user logs in
                 $updateDeletedAtQuery = "UPDATE Users SET deleted_at = NULL WHERE id = :id";
                 $updateDeletedAtStatement = $this->dbConnection->prepare($updateDeletedAtQuery);
                 $updateDeletedAtStatement->bindParam(':id', $user['id'], PDO::PARAM_INT);
@@ -87,7 +88,7 @@ class User
             $statement->bindParam(':userId', $userId, PDO::PARAM_INT);
             $statement->execute();
             $user = $statement->fetch(PDO::FETCH_ASSOC);
-            return $user;
+            return ['success' => true, 'user' => $user];
         } catch (PDOException $e) {
             error_log($e->getMessage());
             return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
@@ -269,7 +270,6 @@ class User
 
             if ($oldUsername['username'] === $username) {
                 return ['success' => false, 'message' => 'Wait a minute. That\'s the same username.'];
-
             }
     
             $checkUsernameSql = "SELECT COUNT(*) as count FROM Users WHERE username = :username";
@@ -317,9 +317,10 @@ class User
 
     public function deleteUser($userId) {
         try {
+            // user will be deleted through an Event set on the mysql database. here, we only update the delete_at flag. $userDeletionDelay is set to two hours
             $currentTimestamp = new DateTime();
             $deletionTimestamp = $currentTimestamp->add(new DateInterval('PT' . self::$userDeletionDelay . 'S'))->format('Y-m-d H:i:s');
-            
+
             $updateDeletedAtSql = "UPDATE Users SET deleted_at = :deletionTimestamp WHERE id = :userId";
             $updateDeletedAtStmt = $this->dbConnection->prepare($updateDeletedAtSql);
     

@@ -25,6 +25,10 @@ class PostController extends BaseController
         $result = $this->postModel->getPosts($postsPerPage, $pageNumber);
     
         $totalPages = ceil($result['totalPosts'] / $postsPerPage);
+
+        if ($pageNumber > $totalPages) {
+            $pageNumber = $totalPages;
+        }
     
         return [
             'success' => $result['success'],
@@ -65,6 +69,10 @@ class PostController extends BaseController
     
         // calculate total pages
         $totalPages = ceil($result['totalPosts'] / $postsPerPage);
+
+        if ($pageNumber > $totalPages) {
+            $pageNumber = $totalPages;
+        }
     
         return [
             'success' => $result['success'],
