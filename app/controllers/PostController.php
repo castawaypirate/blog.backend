@@ -22,14 +22,21 @@ class PostController extends BaseController
     public function getPosts($postsPerPage) {
         $pageNumber = isset($_GET['pageNumber']) ? intval($_GET['pageNumber']) : 1;
         $pageNumber = $pageNumber <= 0? 1 : $pageNumber;
-        $result = $this->postModel->getPosts($postsPerPage, $pageNumber);
-    
-        $totalPages = ceil($result['totalPosts'] / $postsPerPage);
 
+        // first, get the total number of posts for the user
+        $totalPosts = $this->postModel->getTotalPosts();
+
+        // calculate total pages
+        $totalPages = intval(ceil($totalPosts / $postsPerPage));
+
+        // adjust page number if it exceeds total pages
         if ($pageNumber > $totalPages) {
-            $pageNumber = $totalPages;
+            $pageNumber = $totalPages > 0 ? $totalPages : 1;
         }
-    
+
+        // now fetch the posts with the corrected page number
+        $result = $this->postModel->getPosts($postsPerPage, $pageNumber);
+
         return [
             'success' => $result['success'],
             'posts' => $result['posts'],
@@ -62,18 +69,23 @@ class PostController extends BaseController
 
     public function getUserPosts($userId, $postsPerPage) {
         // assign the value 1 if the pageNumber is not present or zero
-        $pageNumber = isset($_GET['pageNumber'])? intval($_GET['pageNumber']) : 1;
-        $pageNumber = $pageNumber <= 0? 1 : $pageNumber;
-        
-        $result = $this->postModel->getUserPosts($userId, $postsPerPage, $pageNumber);
-    
-        // calculate total pages
-        $totalPages = ceil($result['totalPosts'] / $postsPerPage);
+        $pageNumber = isset($_GET['pageNumber']) ? intval($_GET['pageNumber']) : 1;
+        $pageNumber = $pageNumber <= 0 ? 1 : $pageNumber;
 
+        // first, get the total number of posts for the user
+        $totalPosts = $this->postModel->getTotalUserPosts($userId);
+
+        // calculate total pages
+        $totalPages = intval(ceil($totalPosts / $postsPerPage));
+
+        // adjust page number if it exceeds total pages
         if ($pageNumber > $totalPages) {
-            $pageNumber = $totalPages;
+            $pageNumber = $totalPages > 0 ? $totalPages : 1;
         }
-    
+
+        // now fetch the posts with the corrected page number
+        $result = $this->postModel->getUserPosts($userId, $postsPerPage, $pageNumber);
+
         return [
             'success' => $result['success'],
             'posts' => $result['posts'],
@@ -84,7 +96,7 @@ class PostController extends BaseController
     }
 
     public function getPost() {
-        if(!isset($_GET['postId']) || !filter_var($_GET['postId'], FILTER_VALIDATE_INT)) {
+        if (!isset($_GET['postId']) || !filter_var($_GET['postId'], FILTER_VALIDATE_INT)) {
             return ['success' => false, 'message' => 'Invalid or missing post ID.'];            
         }
         $postId = $_GET['postId'];
@@ -93,7 +105,7 @@ class PostController extends BaseController
     }
 
     public function editPost($userId, $request) {
-        if(!isset($_GET['postId']) || !filter_var($_GET['postId'], FILTER_VALIDATE_INT)) {
+        if (!isset($_GET['postId']) || !filter_var($_GET['postId'], FILTER_VALIDATE_INT)) {
             return ['success' => false, 'message' => 'Invalid or missing post ID parameter.'];            
         }
         if (!isset($request['title']) || !isset($request['body'])) {
@@ -105,7 +117,7 @@ class PostController extends BaseController
     }
 
     public function deletePost($userId) {
-        if(!isset($_GET['postId']) || !filter_var($_GET['postId'], FILTER_VALIDATE_INT)) {
+        if (!isset($_GET['postId']) || !filter_var($_GET['postId'], FILTER_VALIDATE_INT)) {
             return ['success' => false, 'message' => 'Invalid or missing post ID parameter.'];            
         }
         $postId = $_GET['postId'];

@@ -35,6 +35,22 @@ class Post
             return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
         }
     }
+
+    public function getTotalPosts() {
+        try {
+            $sql = "SELECT COUNT(*) as totalPosts FROM Posts";
+            $statement = $this->dbConnection->prepare($sql);
+
+            if ($statement->execute()) {
+                return $statement->fetch(PDO::FETCH_ASSOC)['totalPosts'];
+            } else {
+                return 0;
+            }
+        } catch (PDOException $e) {
+            error_log('Database error: ' . $e->getMessage());
+            return 0;
+        }
+    }
     
     public function getPosts($postsPerPage, $pageNumber) {
         try {
@@ -49,20 +65,17 @@ class Post
             
             if ($statement->execute()) { 
                 $posts = $statement->fetchAll(PDO::FETCH_ASSOC);
-        
-                // count the total number of posts
-                $countQuery = "SELECT COUNT(*) as totalPosts FROM Posts";
-                $countStatement = $this->dbConnection->prepare($countQuery);
-                if ($countStatement->execute()) { 
-                    $totalPosts = $countStatement->fetch(PDO::FETCH_ASSOC)['totalPosts'];
+
+                if (count($posts) > 0) {
+                    // return success with the posts
                     return [
                         'success' => true,
                         'posts' => $posts,
-                        'totalPosts' => $totalPosts,
                         'message' => 'Everything\'s good.'
                     ];
                 } else {
-                    return ['success' => false, 'message' => 'Error fetching total count of posts.'];
+                    // return success with a message indicating no posts were found
+                    return ['success' => true, 'posts' => [], 'message' => 'No posts found for this user.'];
                 }
             } else {
                 return ['success' => false, 'message' => 'Error fetching posts.'];
@@ -162,48 +175,53 @@ class Post
         }
     }
 
+    public function getTotalUserPosts($userId) {
+        try {
+            $sql = "SELECT COUNT(*) as totalUserPosts FROM Posts WHERE user_id = :userId";
+            $statement = $this->dbConnection->prepare($sql);
+            $statement->bindParam(':userId', $userId, PDO::PARAM_INT);
+
+            if ($statement->execute()) {
+                return $statement->fetch(PDO::FETCH_ASSOC)['totalUserPosts'];
+            } else {
+                return 0;
+            }
+        } catch (PDOException $e) {
+            error_log('Database error: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
     public function getUserPosts($userId, $postsPerPage, $pageNumber) {
         try {
             $offset = ($pageNumber - 1) * $postsPerPage;
-            $sql = "SELECT * FROM Posts 
-                    WHERE user_id = :userId
-                    ORDER BY created_at DESC 
-                    LIMIT :postsPerPage OFFSET :offset";
+            $sql = "SELECT * FROM Posts
+                WHERE user_id = :userId
+                ORDER BY created_at DESC
+                LIMIT :postsPerPage OFFSET :offset";
             $statement = $this->dbConnection->prepare($sql);
             $statement->bindParam(':userId', $userId, PDO::PARAM_INT);
             $statement->bindParam(':postsPerPage', $postsPerPage, PDO::PARAM_INT);
             $statement->bindParam(':offset', $offset, PDO::PARAM_INT);
-            
-            if ($statement->execute()) { 
+
+            if ($statement->execute()) {
                 $posts = $statement->fetchAll(PDO::FETCH_ASSOC);
-        
-                // count the total number of user's posts
-                $countQuery = "SELECT COUNT(*) as totalUserPosts FROM Posts WHERE user_id = :userId";
-                $countStatement = $this->dbConnection->prepare($countQuery);
-                $countStatement->bindParam(':userId', $userId, PDO::PARAM_INT);
-                if ($countStatement->execute()) { 
-                    $totalUserPosts = $countStatement->fetch(PDO::FETCH_ASSOC)['totalUserPosts'];
-                    // check if any posts were found
-                    if (count($posts) > 0) {
-                        // return success with the posts
-                        return [
-                            'success' => true, 
-                            'posts' => $posts,
-                            'totalPosts' => $totalUserPosts,
-                            'message' => 'Everything\'s good.'
-                        ];
-                    } else {
-                        // return success with a message indicating no posts were found
-                        return ['success' => true, 'message' => 'No posts found for this user.'];
-                    }
-                   
+
+                // check if any posts were found
+                if (count($posts) > 0) {
+                    // return success with the posts
+                    return [
+                        'success' => true,
+                        'posts' => $posts,
+                        'message' => 'Everything\'s good.'
+                    ];
                 } else {
-                    return ['success' => false, 'message' => 'Error fetching total count of user\'s posts.'];
+                    // return success with a message indicating no posts were found
+                    return ['success' => true, 'posts' => [], 'message' => 'No posts found for this user.'];
                 }
             } else {
                 return ['success' => false, 'message' => 'Error fetching user\'s posts.'];
             }
-    
         } catch (PDOException $e) {
             return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
         }

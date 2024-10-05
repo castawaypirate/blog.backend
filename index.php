@@ -180,6 +180,9 @@ route('/api/posts/getUserPosts', function () use ($dbConnection) {
             $result = $postController->getUserPosts($userId, $postsPerPage);
         }
         $jsonResult = json_encode($result);
+        if ($jsonResult === false) {
+            $jsonResult = json_encode(['success' => false, 'message' => 'Error encoding response.']);
+        }
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
     } else {
