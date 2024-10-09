@@ -25,8 +25,10 @@ $dbConnection = $database->getConnection();
 
 $routes = [];
 route('/', function () {
-    echo 'Hello World!';
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['message' => 'Hello World!']);
 });
+
 
 route('/api/users/access', function () use ($dbConnection){
     $request = validateRequest('POST', 'JSON', '', 'access');
@@ -76,7 +78,7 @@ route('/api/posts/getDashboardPosts', function () use ($dbConnection) {
 
 route('/api/posts/create', function () use ($dbConnection) {
     $request = validateRequest('POST', 'JSON', 'Bearer', 'create');
-    if($request){
+    if ($request){
         $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
         $success = $result['success'];
@@ -586,7 +588,8 @@ route('/api/users/delete', function () use ($dbConnection) {
 });
 
 route('/404', function () {
-    echo 'Page not found';
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['message' => 'Page not found.']);
 });
 
 function route(string $path, callable $callback) {
