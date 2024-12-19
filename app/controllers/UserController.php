@@ -73,9 +73,8 @@ class UserController extends BaseController
         $uploadedFile = $_FILES['profilePic'];
 
         // pic must be 2MB max
-        if ($uploadedFile['size'] > 2097152) {
+        if ($uploadedFile['size'] > 10000000) {
             return ['success' => false, 'message' => 'File bigger than 2MB.'];
-
         }
 
         if ($uploadedFile['error'] !== 0) {

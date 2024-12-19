@@ -19,6 +19,23 @@ class Comment
         
         try {
             $this->dbConnection->beginTransaction();
+
+            // first check if 1 minute have passed before the last creation
+            $lastCommentSql = "SELECT created_at FROM Comments WHERE user_id = :userId ORDER BY created_at DESC LIMIT 1";
+            $lastCommentStmt = $this->dbConnection->prepare($lastCommentSql);
+            $lastCommentStmt->bindParam(':userId', $userId, PDO::PARAM_INT);
+            $lastCommentStmt->execute();
+            $lastComment = $lastCommentStmt->fetch(PDO::FETCH_ASSOC);
+            if ($lastComment) {
+                $lastCommentTime = new DateTime($lastComment['created_at']);
+                $currentTime = new DateTime();
+                $timeDiff = $currentTime->diff($lastCommentTime);
+                // something is fucked up with timezones as the difference shouldn't be three hours on the same server
+                if ($timeDiff->i >= 59) {
+                    return ['success' => false, 'timeDiff' => $timeDiff, 'message' => 'Please wait at least 1 minute before posting a new comment.'];
+                }
+            }
+
             $checkPostSql = "SELECT * FROM Posts WHERE id = :postId";
             $checkPostStmt = $this->dbConnection->prepare($checkPostSql);
             $checkPostStmt->bindParam(':postId', $postId, PDO::PARAM_INT);

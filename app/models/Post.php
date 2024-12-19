@@ -13,10 +13,27 @@ class Post
         if (empty($title) || empty($body)) {
             return ['success' => false, 'message' => 'Title or body are empty.'];
         }
-        
+
         // insert the post into the database within a transaction
         try {
             $this->dbConnection->beginTransaction();
+
+            // first check if 10 minutes have passed before the last creation
+            $sql = "SELECT created_at FROM Posts WHERE user_id = :userId ORDER BY created_at DESC LIMIT 1";
+            $stmt = $this->dbConnection->prepare($sql);
+            $stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
+            $stmt->execute();
+            $lastPost = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($lastPost) {
+                $lastPostTime = new DateTime($lastPost['created_at']);
+                $currentTime = new DateTime();
+                $timeDiff = $currentTime->diff($lastPostTime);
+                // Check if less than 10 minutes have passed
+                if ($timeDiff->i >= 50) {
+                    return ['success' => false, 'timeDiff' => $timeDiff, 'message' => 'Please wait at least 10 minutes before creating a new post.'];
+                }
+            }
+
             $sql = "INSERT INTO Posts (user_id, title, body, upvotes, downvotes) VALUES (:userId, :title, :body, 0, 0)";
             $stmt = $this->dbConnection->prepare($sql);
             $stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
@@ -25,7 +42,7 @@ class Post
             
             if ($stmt->execute()) {
                 $this->dbConnection->commit();
-                return ['success' => true, 'message' => 'Post created successfully.'];
+                return ['success' => true, 'timeDiff' => $timeDiff, 'message' => 'Post created successfully.'];
             } else {
                 $this->dbConnection->rollBack();
                 return ['success' => false, 'message' => 'Error creating the post.'];
