@@ -19,10 +19,16 @@ require_once('app/middleware/JwtMiddleware.php');
 require_once('app/controllers/PostController.php');
 require_once('app/controllers/CommentController.php');
 require_once('app/controllers/MessageController.php');
+require_once('app/repositories/UserRepository.php');
+require_once('app/services/UserService.php');
 require_once('app/db/database.php');
 
 $database = new Database();
 $dbConnection = $database->getConnection();
+
+$userRepository = new UserRepository($dbConnection);
+$userService = new UserService($userRepository);
+$userController = new UserController($userService);
 
 $routes = [];
 route('/', function () {
@@ -31,10 +37,9 @@ route('/', function () {
 });
 
 
-route('/api/users/access', function () use ($dbConnection) {
+route('/api/users/access', function () use ($userController) {
     $request = validateRequest('POST', 'JSON', '', 'access');
     if ($request) {
-        $userController = new UserController($dbConnection);
         $result = $userController->access($request);
         $jsonResult = json_encode($result);
         header('Content-Type: application/json; charset=utf-8');
@@ -46,10 +51,9 @@ route('/api/users/access', function () use ($dbConnection) {
     }
 });
 
-route('/api/users/validateUser', function () use ($dbConnection) {
+route('/api/users/validateUser', function () use ($userController) {
     $request = validateRequest('POST', 'JSON', 'Bearer', 'validateUser');
     if ($request) {
-        $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
         $jsonResult = json_encode($result);
         header('Content-Type: application/json; charset=utf-8');
@@ -77,10 +81,9 @@ route('/api/posts/getDashboardPosts', function () use ($dbConnection) {
     }
 });
 
-route('/api/posts/create', function () use ($dbConnection) {
+route('/api/posts/create', function () use ($dbConnection, $userController) {
     $request = validateRequest('POST', 'JSON', 'Bearer', 'create');
     if ($request) {
-        $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
         $success = $result['success'];
         if ($success) {
@@ -101,10 +104,9 @@ route('/api/posts/create', function () use ($dbConnection) {
     }
 });
 
-route('/api/posts/upvote', function () use ($dbConnection) {
+route('/api/posts/upvote', function () use ($dbConnection, $userController) {
     $request = validateRequest('POST', 'JSON', 'Bearer', 'upvote');
     if ($request) {
-        $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
         $success = $result['success'];
         if ($success) {
@@ -124,10 +126,9 @@ route('/api/posts/upvote', function () use ($dbConnection) {
     }
 });
 
-route('/api/posts/downvote', function () use ($dbConnection) {
+route('/api/posts/downvote', function () use ($dbConnection, $userController) {
     $request = validateRequest('POST', 'JSON', 'Bearer', 'downvote');
     if ($request) {
-        $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
         $success = $result['success'];
         if ($success) {
@@ -147,10 +148,9 @@ route('/api/posts/downvote', function () use ($dbConnection) {
     }
 });
 
-route('/api/posts/getUserVotes', function () use ($dbConnection) {
+route('/api/posts/getUserVotes', function () use ($dbConnection, $userController) {
     $request = validateRequest('GET', 'JSON', 'Bearer', 'getUserVotes');
     if ($request) {
-        $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
         $success = $result['success'];
         if ($success) {
@@ -169,10 +169,9 @@ route('/api/posts/getUserVotes', function () use ($dbConnection) {
     }
 });
 
-route('/api/posts/getUserPosts', function () use ($dbConnection) {
+route('/api/posts/getUserPosts', function () use ($dbConnection, $userController) {
     $request = validateRequest('GET', 'JSON', 'Bearer', 'getUserPosts');
     if ($request) {
-        $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
         $success = $result['success'];
         if ($success) {
@@ -210,10 +209,9 @@ route('/api/posts/getPost', function () use ($dbConnection) {
     }
 });
 
-route('/api/posts/edit', function () use ($dbConnection) {
+route('/api/posts/edit', function () use ($dbConnection, $userController) {
     $request = validateRequest('PUT', 'JSON', 'Bearer', 'edit');
     if ($request) {
-        $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
         $success = $result['success'];
         if ($success) {
@@ -232,10 +230,9 @@ route('/api/posts/edit', function () use ($dbConnection) {
     }
 });
 
-route('/api/posts/delete', function () use ($dbConnection) {
+route('/api/posts/delete', function () use ($dbConnection, $userController) {
     $request = validateRequest('DELETE', 'JSON', 'Bearer', 'delete');
     if ($request) {
-        $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
         $success = $result['success'];
         if ($success) {
@@ -254,10 +251,9 @@ route('/api/posts/delete', function () use ($dbConnection) {
     }
 });
 
-route('/api/comments/create', function () use ($dbConnection) {
+route('/api/comments/create', function () use ($dbConnection, $userController) {
     $request = validateRequest('POST', 'JSON', 'Bearer', 'create');
     if ($request) {
-        $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
         $success = $result['success'];
         if ($success) {
@@ -291,10 +287,9 @@ route('/api/comments/getPostComments', function () use ($dbConnection) {
     }
 });
 
-route('/api/comments/upvote', function () use ($dbConnection) {
+route('/api/comments/upvote', function () use ($dbConnection, $userController) {
     $request = validateRequest('POST', 'JSON', 'Bearer', 'upvote');
     if ($request) {
-        $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
         $success = $result['success'];
         if ($success) {
@@ -315,10 +310,9 @@ route('/api/comments/upvote', function () use ($dbConnection) {
     }
 });
 
-route('/api/comments/downvote', function () use ($dbConnection) {
+route('/api/comments/downvote', function () use ($dbConnection, $userController) {
     $request = validateRequest('POST', 'JSON', 'Bearer', 'downvote');
     if ($request) {
-        $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
         $success = $result['success'];
         if ($success) {
@@ -339,10 +333,9 @@ route('/api/comments/downvote', function () use ($dbConnection) {
     }
 });
 
-route('/api/comments/getUserVotes', function () use ($dbConnection) {
+route('/api/comments/getUserVotes', function () use ($dbConnection, $userController) {
     $request = validateRequest('GET', 'JSON', 'Bearer', 'getUserVotes');
     if ($request) {
-        $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
         $success = $result['success'];
         if ($success) {
@@ -361,10 +354,9 @@ route('/api/comments/getUserVotes', function () use ($dbConnection) {
     }
 });
 
-route('/api/comments/getUserComments', function () use ($dbConnection) {
+route('/api/comments/getUserComments', function () use ($dbConnection, $userController) {
     $request = validateRequest('GET', 'JSON', 'Bearer', 'getUserComments');
     if ($request) {
-        $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
         $success = $result['success'];
         if ($success) {
@@ -383,10 +375,9 @@ route('/api/comments/getUserComments', function () use ($dbConnection) {
     }
 });
 
-route('/api/comments/edit', function () use ($dbConnection) {
+route('/api/comments/edit', function () use ($dbConnection, $userController) {
     $request = validateRequest('PUT', 'JSON', 'Bearer', 'edit');
     if ($request) {
-        $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
         $success = $result['success'];
         if ($success) {
@@ -405,10 +396,9 @@ route('/api/comments/edit', function () use ($dbConnection) {
     }
 });
 
-route('/api/comments/delete', function () use ($dbConnection) {
+route('/api/comments/delete', function () use ($dbConnection, $userController) {
     $request = validateRequest('DELETE', 'JSON', 'Bearer', 'delete');
     if ($request) {
-        $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
         $success = $result['success'];
         if ($success) {
@@ -427,16 +417,15 @@ route('/api/comments/delete', function () use ($dbConnection) {
     }
 });
 
-route('/api/users/getUserData', function () use ($dbConnection) {
+route('/api/users/getUserData', function () use ($userController) {
     $request = validateRequest('GET', 'JSON', 'Bearer', 'getUserData');
     if ($request) {
-        $userController = new UserController($dbConnection);
-        $result = $userController->validateUser();
-        $success = $result['success'];
-        if ($success) {
-            $user = $result['user'];
-            $userId = $user->user_id;
+        $validation = $userController->validateUser();
+        if ($validation['success']) {
+            $userId = $validation['user']->user_id;
             $result = $userController->getUserData($userId);
+        } else {
+            $result = $validation;
         }
         $jsonResult = json_encode($result);
         header('Content-Type: application/json; charset=utf-8');
@@ -448,16 +437,15 @@ route('/api/users/getUserData', function () use ($dbConnection) {
     }
 });
 
-route('/api/users/uploadProfilePic', function () use ($dbConnection) {
+route('/api/users/uploadProfilePic', function () use ($userController) {
     $request = validateRequest('POST', 'FORM_DATA', 'Bearer', 'uploadProfilePic');
     if ($request) {
-        $userController = new UserController($dbConnection);
-        $result = $userController->validateUser();
-        $success = $result['success'];
-        if ($success) {
-            $user = $result['user'];
-            $userId = $user->user_id;
+        $validation = $userController->validateUser();
+        if ($validation['success']) {
+            $userId = $validation['user']->user_id;
             $result = $userController->uploadProfilePic($userId);
+        } else {
+            $result = $validation;
         }
         $jsonResult = json_encode($result);
         header('Content-Type: application/json; charset=utf-8');
@@ -469,15 +457,12 @@ route('/api/users/uploadProfilePic', function () use ($dbConnection) {
     }
 });
 
-route('/api/users/getProfilePic', function () use ($dbConnection) {
+route('/api/users/getProfilePic', function () use ($userController) {
     $request = validateRequest('GET', '', 'Bearer', 'getProfilePic');
     if ($request) {
-        $userController = new UserController($dbConnection);
-        $result = $userController->validateUser();
-        $success = $result['success'];
-        if ($success) {
-            $user = $result['user'];
-            $userId = $user->user_id;
+        $validation = $userController->validateUser();
+        if ($validation['success']) {
+            $userId = $validation['user']->user_id;
             $result = $userController->getProfilePic($userId);
 
             if ($result['success']) {
@@ -485,18 +470,15 @@ route('/api/users/getProfilePic', function () use ($dbConnection) {
                 $profilePicFullPath = $data['profile_pic_full_path'];
                 $profilePicMimeType = $data['profile_pic_mime_type'];
                 header('Content-Type: ' . $profilePicMimeType);
-                // header('Content-Disposition: inline');
                 readfile($profilePicFullPath);
-            } else {
-                $jsonResult = json_encode($result);
-                header('Content-Type: application/json; charset=utf-8');
-                echo $jsonResult;
+                return;
             }
         } else {
-            $jsonResult = json_encode(['success' => false, 'message' => 'Token validaton failed.']);
-            header('Content-Type: application/json; charset=utf-8');
-            echo $jsonResult;
+            $result = $validation;
         }
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
     } else {
         $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
         header('Content-Type: application/json; charset=utf-8');
@@ -504,16 +486,15 @@ route('/api/users/getProfilePic', function () use ($dbConnection) {
     }
 });
 
-route('/api/users/deleteProfilePic', function () use ($dbConnection) {
+route('/api/users/deleteProfilePic', function () use ($userController) {
     $request = validateRequest('DELETE', '', 'Bearer', 'deleteProfilePic');
     if ($request) {
-        $userController = new UserController($dbConnection);
-        $result = $userController->validateUser();
-        $success = $result['success'];
-        if ($success) {
-            $user = $result['user'];
-            $userId = $user->user_id;
+        $validation = $userController->validateUser();
+        if ($validation['success']) {
+            $userId = $validation['user']->user_id;
             $result = $userController->deleteProfilePic($userId);
+        } else {
+            $result = $validation;
         }
         $jsonResult = json_encode($result);
         header('Content-Type: application/json; charset=utf-8');
@@ -525,16 +506,15 @@ route('/api/users/deleteProfilePic', function () use ($dbConnection) {
     }
 });
 
-route('/api/users/changeUsername', function () use ($dbConnection) {
+route('/api/users/changeUsername', function () use ($userController) {
     $request = validateRequest('PUT', 'JSON', 'Bearer', 'changeUsername');
     if ($request) {
-        $userController = new UserController($dbConnection);
-        $result = $userController->validateUser();
-        $success = $result['success'];
-        if ($success) {
-            $user = $result['user'];
-            $userId = $user->user_id;
+        $validation = $userController->validateUser();
+        if ($validation['success']) {
+            $userId = $validation['user']->user_id;
             $result = $userController->changeUsername($userId, $request);
+        } else {
+            $result = $validation;
         }
         $jsonResult = json_encode($result);
         header('Content-Type: application/json; charset=utf-8');
@@ -546,16 +526,15 @@ route('/api/users/changeUsername', function () use ($dbConnection) {
     }
 });
 
-route('/api/users/changePassword', function () use ($dbConnection) {
+route('/api/users/changePassword', function () use ($userController) {
     $request = validateRequest('PUT', 'JSON', 'Bearer', 'changePassword');
     if ($request) {
-        $userController = new UserController($dbConnection);
-        $result = $userController->validateUser();
-        $success = $result['success'];
-        if ($success) {
-            $user = $result['user'];
-            $userId = $user->user_id;
+        $validation = $userController->validateUser();
+        if ($validation['success']) {
+            $userId = $validation['user']->user_id;
             $result = $userController->changePassword($userId, $request);
+        } else {
+            $result = $validation;
         }
         $jsonResult = json_encode($result);
         header('Content-Type: application/json; charset=utf-8');
@@ -567,10 +546,9 @@ route('/api/users/changePassword', function () use ($dbConnection) {
     }
 });
 
-route('/api/messages/send', function () use ($dbConnection) {
+route('/api/messages/send', function () use ($dbConnection, $userController) {
     $request = validateRequest('POST', 'JSON', 'Bearer', 'sendMessage');
     if ($request) {
-        $userController = new UserController($dbConnection);
         $result = $userController->validateUser();
         $success = $result['success'];
         if ($success) {
@@ -589,16 +567,15 @@ route('/api/messages/send', function () use ($dbConnection) {
     }
 });
 
-route('/api/users/delete', function () use ($dbConnection) {
+route('/api/users/delete', function () use ($userController) {
     $request = validateRequest('PUT', '', 'Bearer', 'delete');
     if ($request) {
-        $userController = new UserController($dbConnection);
-        $result = $userController->validateUser();
-        $success = $result['success'];
-        if ($success) {
-            $user = $result['user'];
-            $userId = $user->user_id;
+        $validation = $userController->validateUser();
+        if ($validation['success']) {
+            $userId = $validation['user']->user_id;
             $result = $userController->deleteUser($userId);
+        } else {
+            $result = $validation;
         }
         $jsonResult = json_encode($result);
         header('Content-Type: application/json; charset=utf-8');

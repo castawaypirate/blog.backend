@@ -1,70 +1,54 @@
 <?php
-require_once __DIR__ . '/../models/User.php';
-require_once __DIR__ . '/../utils/jwt_helper.php';
-require_once __DIR__.'/BaseController.php';
+require_once __DIR__ . '/../services/UserService.php';
+require_once __DIR__ . '/BaseController.php';
 
 class UserController extends BaseController
 {
-    private $userModel;
+    private $userService;
 
-    public function __construct($dbConnection) {
-        $this->userModel = new User($dbConnection);
+    public function __construct($userService)
+    {
+        $this->userService = $userService;
     }
 
-    public function access($request) {
+    public function access($request)
+    {
         if (!isset($request['username']) || !isset($request['password'])) {
             return ['success' => false, 'message' => 'Username and password are required.'];
         }
 
-        $user = $this->userModel->getUserByUsername($request['username']);
-
-        if ($user) {
-            if (password_verify($request['password'], $user['password'])) {
-                $token = JWTHelper::generateToken(['user_id' => $user['id'], 'username' => $user['username']]);
-                if ($token) {
-                    return ['success' => true, 'token' => $token, 'message' => 'Logged in.'];
-                } else {
-                    return ['success' => false, 'message' => 'Failed to generate JWT token.'];
-                }
-            }
-            else {
-                return ['success' => false, 'message' => 'Wrong password.'];
-            }
-        }
-
-        $result = $this->userModel->addUser($request['username'], $request['email'] ?? null, $request['password']);
-
-        if ($result['success']) {
-            $user = $this->userModel->getUserByUsername($request['username']);
-            $token = JWTHelper::generateToken(['user_id' => $user['id'], 'username' => $user['username']]);
-            
-            if ($token) {
-                return ['success' => true, 'token' => $token, 'message' => 'User created successfully.'];
-            } else {
-                return ['success' => false, 'message' => 'User creation failed to generate token.'];
-            }
-        } else {
-            return $result;
-        }
+        return $this->userService->authenticateOrRegister($request['username'], $request['password'], $request['email'] ?? null);
     }
 
-    public function validateUser() {
+    public function validateUser()
+    {
+        // Keeping existing middleware logic which was here.
+        // But since this method was just calling middleware, we can keep it as is.
+        // Wait, the existing code:
+        /*
+        $jwtMiddleware = new JWTMiddleware(JWTHelper::getSecretKey());
+        $result = $jwtMiddleware->validateToken();
+        return $result;
+        */
+        // I need to make sure JWTMiddleware is available.
+        require_once __DIR__ . '/../middleware/JwtMiddleware.php';
         $jwtMiddleware = new JWTMiddleware(JWTHelper::getSecretKey());
         $result = $jwtMiddleware->validateToken();
         return $result;
     }
 
-    public function getUserData($userId) {
-        $result = $this->userModel->getUserData($userId);
-        return $result;
+    public function getUserData($userId)
+    {
+        return $this->userService->getUserData($userId);
     }
 
-    public function uploadProfilePic($userId) {
+    public function uploadProfilePic($userId)
+    {
         if (empty($_FILES)) {
             return ['success' => false, 'message' => 'File not found.'];
         }
 
-        $fileCount= count($_FILES);
+        $fileCount = count($_FILES);
 
         if ($fileCount > 1) {
             return ['success' => false, 'message' => 'More than one file uploaded.'];
@@ -98,30 +82,30 @@ class UserController extends BaseController
             return ['success' => false, 'message' => 'Invalid file type. Only JPEG, PNG, and GIF are allowed.'];
         }
 
-        $result = $this->userModel->uploadProfilePic($userId, $uploadedFile);
-        return $result;
+        return $this->userService->uploadProfilePic($userId, $uploadedFile);
     }
 
-    public function getProfilePic($userId) {
-        $result = $this->userModel->getProfilePic($userId);
-        return $result;
+    public function getProfilePic($userId)
+    {
+        return $this->userService->getProfilePic($userId);
     }
 
-    public function deleteProfilePic($userId) {
-        $result = $this->userModel->deleteProfilePic($userId);
-        return $result;
+    public function deleteProfilePic($userId)
+    {
+        return $this->userService->deleteProfilePic($userId);
     }
 
-    public function changeUsername($userId, $request) {
+    public function changeUsername($userId, $request)
+    {
         if (!isset($request['username'])) {
             return ['success' => false, 'message' => 'Username is required.'];
         }
-        
-        $result = $this->userModel->changeUsername($userId, $request['username']);
-        return $result;
+
+        return $this->userService->changeUsername($userId, $request['username']);
     }
 
-    public function changePassword($userId, $request) {
+    public function changePassword($userId, $request)
+    {
         if (!isset($request['oldPassword'])) {
             return ['success' => false, 'message' => 'Old password is required.'];
         }
@@ -134,24 +118,12 @@ class UserController extends BaseController
             return ['success' => false, 'message' => 'New password cannot be the same as the old password.'];
         }
 
-        $user = $this->userModel->getUserByUserId($userId);
-
-        if ($user) {
-            if (password_verify($request['oldPassword'], $user['password'])) {
-                $result = $this->userModel->changePassword($userId, $request['newPassword']);
-                return $result;
-            }
-            else {
-                return ['success' => false, 'message' => 'Wrong password.'];
-            }
-        } else {
-            return ['success' => false, 'message' => 'User not found.'];
-        }
+        return $this->userService->changePassword($userId, $request['oldPassword'], $request['newPassword']);
     }
 
-    public function deleteUser($userId) {
-        $result = $this->userModel->deleteUser($userId);
-        return $result;
+    public function deleteUser($userId)
+    {
+        return $this->userService->deleteUser($userId);
     }
 }
 ?>
