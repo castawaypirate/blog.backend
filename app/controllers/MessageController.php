@@ -6,9 +6,9 @@ class MessageController extends BaseController
 {
     private $messageService;
 
-    public function __construct($dbConnection)
+    public function __construct($messageService)
     {
-        $this->messageService = new MessageService($dbConnection);
+        $this->messageService = $messageService;
     }
 
     public function sendMessage($senderId, $request)

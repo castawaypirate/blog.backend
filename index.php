@@ -21,6 +21,8 @@ require_once('app/controllers/CommentController.php');
 require_once('app/controllers/MessageController.php');
 require_once('app/repositories/UserRepository.php');
 require_once('app/services/UserService.php');
+require_once('app/services/CommentService.php');
+require_once('app/services/CommentService.php');
 require_once('app/db/database.php');
 
 $database = new Database();
@@ -29,6 +31,13 @@ $dbConnection = $database->getConnection();
 $userRepository = new UserRepository($dbConnection);
 $userService = new UserService($userRepository);
 $userController = new UserController($userService);
+
+$commentService = new CommentService($dbConnection);
+$commentController = new CommentController($commentService);
+
+require_once('app/services/MessageService.php');
+$messageService = new MessageService($dbConnection);
+$messageController = new MessageController($messageService);
 
 $routes = [];
 route('/', function () {
@@ -251,7 +260,7 @@ route('/api/posts/delete', function () use ($dbConnection, $userController) {
     }
 });
 
-route('/api/comments/create', function () use ($dbConnection, $userController) {
+route('/api/comments/create', function () use ($commentController, $userController) {
     $request = validateRequest('POST', 'JSON', 'Bearer', 'create');
     if ($request) {
         $result = $userController->validateUser();
@@ -259,7 +268,6 @@ route('/api/comments/create', function () use ($dbConnection, $userController) {
         if ($success) {
             $user = $result['user'];
             $userId = $user->user_id;
-            $commentController = new CommentController($dbConnection);
             $result = $commentController->createComment($userId, $request);
         }
         $jsonResult = json_encode($result);
@@ -272,10 +280,9 @@ route('/api/comments/create', function () use ($dbConnection, $userController) {
     }
 });
 
-route('/api/comments/getPostComments', function () use ($dbConnection) {
+route('/api/comments/getPostComments', function () use ($commentController) {
     $request = validateRequest('GET', 'JSON', '', 'getPostComments');
     if ($request) {
-        $commentController = new CommentController($dbConnection);
         $result = $commentController->getPostComments();
         $jsonResult = json_encode($result);
         header('Content-Type: application/json; charset=utf-8');
@@ -287,7 +294,7 @@ route('/api/comments/getPostComments', function () use ($dbConnection) {
     }
 });
 
-route('/api/comments/upvote', function () use ($dbConnection, $userController) {
+route('/api/comments/upvote', function () use ($commentController, $userController) {
     $request = validateRequest('POST', 'JSON', 'Bearer', 'upvote');
     if ($request) {
         $result = $userController->validateUser();
@@ -297,7 +304,6 @@ route('/api/comments/upvote', function () use ($dbConnection, $userController) {
             $userId = $user->user_id;
             $postId = $request['postId'];
             $commentId = $request['commentId'];
-            $commentController = new CommentController($dbConnection);
             $result = $commentController->upvoteComment($userId, $postId, $commentId);
         }
         $jsonResult = json_encode($result);
@@ -310,7 +316,7 @@ route('/api/comments/upvote', function () use ($dbConnection, $userController) {
     }
 });
 
-route('/api/comments/downvote', function () use ($dbConnection, $userController) {
+route('/api/comments/downvote', function () use ($commentController, $userController) {
     $request = validateRequest('POST', 'JSON', 'Bearer', 'downvote');
     if ($request) {
         $result = $userController->validateUser();
@@ -320,7 +326,6 @@ route('/api/comments/downvote', function () use ($dbConnection, $userController)
             $userId = $user->user_id;
             $postId = $request['postId'];
             $commentId = $request['commentId'];
-            $commentController = new CommentController($dbConnection);
             $result = $commentController->downvoteComment($userId, $postId, $commentId);
         }
         $jsonResult = json_encode($result);
@@ -333,7 +338,7 @@ route('/api/comments/downvote', function () use ($dbConnection, $userController)
     }
 });
 
-route('/api/comments/getUserVotes', function () use ($dbConnection, $userController) {
+route('/api/comments/getUserVotes', function () use ($commentController, $userController) {
     $request = validateRequest('GET', 'JSON', 'Bearer', 'getUserVotes');
     if ($request) {
         $result = $userController->validateUser();
@@ -341,7 +346,6 @@ route('/api/comments/getUserVotes', function () use ($dbConnection, $userControl
         if ($success) {
             $user = $result['user'];
             $userId = $user->user_id;
-            $commentController = new CommentController($dbConnection);
             $result = $commentController->getUserVotes($userId);
         }
         $jsonResult = json_encode($result);
@@ -354,7 +358,7 @@ route('/api/comments/getUserVotes', function () use ($dbConnection, $userControl
     }
 });
 
-route('/api/comments/getUserComments', function () use ($dbConnection, $userController) {
+route('/api/comments/getUserComments', function () use ($commentController, $userController) {
     $request = validateRequest('GET', 'JSON', 'Bearer', 'getUserComments');
     if ($request) {
         $result = $userController->validateUser();
@@ -362,7 +366,6 @@ route('/api/comments/getUserComments', function () use ($dbConnection, $userCont
         if ($success) {
             $user = $result['user'];
             $userId = $user->user_id;
-            $commentController = new CommentController($dbConnection);
             $result = $commentController->getUserComments($userId);
         }
         $jsonResult = json_encode($result);
@@ -375,7 +378,7 @@ route('/api/comments/getUserComments', function () use ($dbConnection, $userCont
     }
 });
 
-route('/api/comments/edit', function () use ($dbConnection, $userController) {
+route('/api/comments/edit', function () use ($commentController, $userController) {
     $request = validateRequest('PUT', 'JSON', 'Bearer', 'edit');
     if ($request) {
         $result = $userController->validateUser();
@@ -383,7 +386,6 @@ route('/api/comments/edit', function () use ($dbConnection, $userController) {
         if ($success) {
             $user = $result['user'];
             $userId = $user->user_id;
-            $commentController = new CommentController($dbConnection);
             $result = $commentController->editComment($userId, $request);
         }
         $jsonResult = json_encode($result);
@@ -396,7 +398,7 @@ route('/api/comments/edit', function () use ($dbConnection, $userController) {
     }
 });
 
-route('/api/comments/delete', function () use ($dbConnection, $userController) {
+route('/api/comments/delete', function () use ($commentController, $userController) {
     $request = validateRequest('DELETE', 'JSON', 'Bearer', 'delete');
     if ($request) {
         $result = $userController->validateUser();
@@ -404,7 +406,6 @@ route('/api/comments/delete', function () use ($dbConnection, $userController) {
         if ($success) {
             $user = $result['user'];
             $userId = $user->user_id;
-            $commentController = new CommentController($dbConnection);
             $result = $commentController->deleteComment($userId);
         }
         $jsonResult = json_encode($result);
@@ -546,7 +547,7 @@ route('/api/users/changePassword', function () use ($userController) {
     }
 });
 
-route('/api/messages/send', function () use ($dbConnection, $userController) {
+route('/api/messages/send', function () use ($messageController, $userController) {
     $request = validateRequest('POST', 'JSON', 'Bearer', 'sendMessage');
     if ($request) {
         $result = $userController->validateUser();
@@ -554,7 +555,6 @@ route('/api/messages/send', function () use ($dbConnection, $userController) {
         if ($success) {
             $user = $result['user'];
             $userId = $user->user_id;
-            $messageController = new MessageController($dbConnection);
             $result = $messageController->sendMessage($userId, $request);
         }
         $jsonResult = json_encode($result);
