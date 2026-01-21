@@ -22,6 +22,7 @@ require_once('app/controllers/MessageController.php');
 require_once('app/repositories/UserRepository.php');
 require_once('app/services/UserService.php');
 require_once('app/services/CommentService.php');
+require_once('app/services/PostService.php');
 require_once('app/services/CommentService.php');
 require_once('app/db/database.php');
 
@@ -38,6 +39,9 @@ $commentController = new CommentController($commentService);
 require_once('app/services/MessageService.php');
 $messageService = new MessageService($dbConnection);
 $messageController = new MessageController($messageService);
+
+$postService = new PostService($dbConnection);
+$postController = new PostController($postService);
 
 $routes = [];
 route('/', function () {
@@ -74,11 +78,10 @@ route('/api/users/validateUser', function () use ($userController) {
     }
 });
 
-route('/api/posts/getDashboardPosts', function () use ($dbConnection) {
+route('/api/posts/getDashboardPosts', function () use ($postController) {
     $request = validateRequest('GET', 'JSON', '', 'getDashboardPosts');
     if ($request) {
         $postsPerPage = POSTS_PER_PAGE;
-        $postController = new PostController($dbConnection);
         $result = $postController->getPosts($postsPerPage);
         $jsonResult = json_encode($result);
         header('Content-Type: application/json; charset=utf-8');
@@ -90,7 +93,7 @@ route('/api/posts/getDashboardPosts', function () use ($dbConnection) {
     }
 });
 
-route('/api/posts/create', function () use ($dbConnection, $userController) {
+route('/api/posts/create', function () use ($postController, $userController) {
     $request = validateRequest('POST', 'JSON', 'Bearer', 'create');
     if ($request) {
         $result = $userController->validateUser();
@@ -98,7 +101,6 @@ route('/api/posts/create', function () use ($dbConnection, $userController) {
         if ($success) {
             $user = $result['user'];
             $userId = $user->user_id;
-            $postController = new PostController($dbConnection);
             $result = $postController->createPost($userId, $request);
         }
         // this is outside the if, so if $success is false, it will return the $result from token validation
@@ -113,7 +115,7 @@ route('/api/posts/create', function () use ($dbConnection, $userController) {
     }
 });
 
-route('/api/posts/upvote', function () use ($dbConnection, $userController) {
+route('/api/posts/upvote', function () use ($postController, $userController) {
     $request = validateRequest('POST', 'JSON', 'Bearer', 'upvote');
     if ($request) {
         $result = $userController->validateUser();
@@ -122,7 +124,6 @@ route('/api/posts/upvote', function () use ($dbConnection, $userController) {
             $user = $result['user'];
             $userId = $user->user_id;
             $postId = $request['postId'];
-            $postController = new PostController($dbConnection);
             $result = $postController->upvotePost($userId, $postId);
         }
         $jsonResult = json_encode($result);
@@ -135,7 +136,7 @@ route('/api/posts/upvote', function () use ($dbConnection, $userController) {
     }
 });
 
-route('/api/posts/downvote', function () use ($dbConnection, $userController) {
+route('/api/posts/downvote', function () use ($postController, $userController) {
     $request = validateRequest('POST', 'JSON', 'Bearer', 'downvote');
     if ($request) {
         $result = $userController->validateUser();
@@ -144,7 +145,6 @@ route('/api/posts/downvote', function () use ($dbConnection, $userController) {
             $user = $result['user'];
             $userId = $user->user_id;
             $postId = $request['postId'];
-            $postController = new PostController($dbConnection);
             $result = $postController->downvotePost($userId, $postId);
         }
         $jsonResult = json_encode($result);
@@ -157,7 +157,7 @@ route('/api/posts/downvote', function () use ($dbConnection, $userController) {
     }
 });
 
-route('/api/posts/getUserVotes', function () use ($dbConnection, $userController) {
+route('/api/posts/getUserVotes', function () use ($postController, $userController) {
     $request = validateRequest('GET', 'JSON', 'Bearer', 'getUserVotes');
     if ($request) {
         $result = $userController->validateUser();
@@ -165,7 +165,6 @@ route('/api/posts/getUserVotes', function () use ($dbConnection, $userController
         if ($success) {
             $user = $result['user'];
             $userId = $user->user_id;
-            $postController = new PostController($dbConnection);
             $result = $postController->getUserVotes($userId);
         }
         $jsonResult = json_encode($result);
@@ -178,7 +177,7 @@ route('/api/posts/getUserVotes', function () use ($dbConnection, $userController
     }
 });
 
-route('/api/posts/getUserPosts', function () use ($dbConnection, $userController) {
+route('/api/posts/getUserPosts', function () use ($postController, $userController) {
     $request = validateRequest('GET', 'JSON', 'Bearer', 'getUserPosts');
     if ($request) {
         $result = $userController->validateUser();
@@ -187,7 +186,6 @@ route('/api/posts/getUserPosts', function () use ($dbConnection, $userController
             $user = $result['user'];
             $userId = $user->user_id;
             $postsPerPage = POSTS_PER_PAGE;
-            $postController = new PostController($dbConnection);
             $result = $postController->getUserPosts($userId, $postsPerPage);
         }
         $jsonResult = json_encode($result);
@@ -203,10 +201,9 @@ route('/api/posts/getUserPosts', function () use ($dbConnection, $userController
     }
 });
 
-route('/api/posts/getPost', function () use ($dbConnection) {
+route('/api/posts/getPost', function () use ($postController) {
     $request = validateRequest('GET', 'JSON', '', 'getPost');
     if ($request) {
-        $postController = new PostController($dbConnection);
         $result = $postController->getPost();
         $jsonResult = json_encode($result);
         header('Content-Type: application/json; charset=utf-8');
@@ -218,7 +215,7 @@ route('/api/posts/getPost', function () use ($dbConnection) {
     }
 });
 
-route('/api/posts/edit', function () use ($dbConnection, $userController) {
+route('/api/posts/edit', function () use ($postController, $userController) {
     $request = validateRequest('PUT', 'JSON', 'Bearer', 'edit');
     if ($request) {
         $result = $userController->validateUser();
@@ -226,7 +223,6 @@ route('/api/posts/edit', function () use ($dbConnection, $userController) {
         if ($success) {
             $user = $result['user'];
             $userId = $user->user_id;
-            $postController = new PostController($dbConnection);
             $result = $postController->editPost($userId, $request);
         }
         $jsonResult = json_encode($result);
@@ -239,7 +235,7 @@ route('/api/posts/edit', function () use ($dbConnection, $userController) {
     }
 });
 
-route('/api/posts/delete', function () use ($dbConnection, $userController) {
+route('/api/posts/delete', function () use ($postController, $userController) {
     $request = validateRequest('DELETE', 'JSON', 'Bearer', 'delete');
     if ($request) {
         $result = $userController->validateUser();
@@ -247,7 +243,6 @@ route('/api/posts/delete', function () use ($dbConnection, $userController) {
         if ($success) {
             $user = $result['user'];
             $userId = $user->user_id;
-            $postController = new PostController($dbConnection);
             $result = $postController->deletePost($userId);
         }
         $jsonResult = json_encode($result);

@@ -1,128 +1,87 @@
 <?php
-require_once __DIR__ . '/../models/Post.php';
-require_once __DIR__.'/BaseController.php';
+require_once __DIR__ . '/BaseController.php';
+require_once __DIR__ . '/../services/PostService.php';
 
 class PostController extends BaseController
 {
-    private $postModel;
+    private $postService;
 
-    public function __construct($dbConnection) {
-        $this->postModel = new Post($dbConnection);
+    public function __construct($postService)
+    {
+        $this->postService = $postService;
     }
 
-    public function createPost($userId, $request) {
+    public function createPost($userId, $request)
+    {
         if (!isset($request['title']) || !isset($request['body'])) {
             return ['success' => false, 'message' => 'Title and body are required.'];
         }
-        
-        $result = $this->postModel->createPost($userId, $request['title'], $request['body']);
-        return $result;
+
+        return $this->postService->createPost($userId, $request);
     }
 
-    public function getPosts($postsPerPage) {
-        $pageNumber = isset($_GET['pageNumber']) ? intval($_GET['pageNumber']) : 1;
-        $pageNumber = $pageNumber <= 0? 1 : $pageNumber;
-
-        // first, get the total number of posts for the user
-        $totalPosts = $this->postModel->getTotalPosts();
-
-        // calculate total pages
-        $totalPages = intval(ceil($totalPosts / $postsPerPage));
-
-        // adjust page number if it exceeds total pages
-        if ($pageNumber > $totalPages) {
-            $pageNumber = $totalPages > 0 ? $totalPages : 1;
-        }
-
-        // now fetch the posts with the corrected page number
-        $result = $this->postModel->getPosts($postsPerPage, $pageNumber);
-
-        return [
-            'success' => $result['success'],
-            'posts' => $result['posts'],
-            'pageNumber' => $pageNumber,
-            'totalPages' => $totalPages,
-            'message' => $result['message']
-        ];
+    public function getPosts($postsPerPage)
+    {
+        return $this->postService->getPosts($postsPerPage);
     }
 
-    public function upvotePost($userId, $postId) {
+    public function upvotePost($userId, $postId)
+    {
         if (!is_int($postId) || !filter_var($postId, FILTER_VALIDATE_INT) || $postId <= 0) {
             return ['success' => false, 'message' => 'Invalid post ID.'];
         }
-        $result = $this->postModel->upvotePost($userId, $postId);
-        return $result;
+        return $this->postService->upvotePost($userId, $postId);
     }
-    
-    public function downvotePost($userId, $postId) {
+
+    public function downvotePost($userId, $postId)
+    {
         if (!is_int($postId) || !filter_var($postId, FILTER_VALIDATE_INT) || $postId <= 0) {
             return ['success' => false, 'message' => 'Invalid post ID.'];
         }
-        $result = $this->postModel->downvotePost($userId, $postId);
-        return $result;
+        return $this->postService->downvotePost($userId, $postId);
     }
 
-    public function getUserVotes($userId) {
-        $result = $this->postModel->getUserVotes($userId);
-        return $result;
+    public function getUserVotes($userId)
+    {
+        return $this->postService->getUserVotes($userId);
     }
 
-    public function getUserPosts($userId, $postsPerPage) {
-        // assign the value 1 if the pageNumber is not present or zero
-        $pageNumber = isset($_GET['pageNumber']) ? intval($_GET['pageNumber']) : 1;
-        $pageNumber = $pageNumber <= 0 ? 1 : $pageNumber;
-
-        // first, get the total number of posts for the user
-        $totalPosts = $this->postModel->getTotalUserPosts($userId);
-
-        // calculate total pages
-        $totalPages = intval(ceil($totalPosts / $postsPerPage));
-
-        // adjust page number if it exceeds total pages
-        if ($pageNumber > $totalPages) {
-            $pageNumber = $totalPages > 0 ? $totalPages : 1;
-        }
-
-        // now fetch the posts with the corrected page number
-        $result = $this->postModel->getUserPosts($userId, $postsPerPage, $pageNumber);
-
-        return [
-            'success' => $result['success'],
-            'posts' => $result['posts'],
-            'pageNumber' => $pageNumber,
-            'totalPages' => $totalPages,
-            'message' => $result['message']
-        ];
+    public function getUserPosts($userId, $postsPerPage)
+    {
+        return $this->postService->getUserPosts($userId, $postsPerPage);
     }
 
-    public function getPost() {
+    public function getPost()
+    {
         if (!isset($_GET['postId']) || !filter_var($_GET['postId'], FILTER_VALIDATE_INT)) {
-            return ['success' => false, 'message' => 'Invalid or missing post ID.'];            
+            return ['success' => false, 'message' => 'Invalid or missing post ID.'];
         }
         $postId = $_GET['postId'];
-        $result = $this->postModel->getPost($postId);
-        return $result;
+        return $this->postService->getPost($postId);
     }
 
-    public function editPost($userId, $request) {
+    public function editPost($userId, $request)
+    {
         if (!isset($_GET['postId']) || !filter_var($_GET['postId'], FILTER_VALIDATE_INT)) {
-            return ['success' => false, 'message' => 'Invalid or missing post ID parameter.'];            
+            return ['success' => false, 'message' => 'Invalid or missing post ID parameter.'];
         }
         if (!isset($request['title']) || !isset($request['body'])) {
             return ['success' => false, 'message' => 'Title and body are required.'];
         }
         $postId = $_GET['postId'];
-        $result = $this->postModel->editPost($userId, $postId, $request['title'], $request['body']);
-        return $result;
+        $title = $request['title'];
+        $body = $request['body'];
+
+        return $this->postService->editPost($userId, $postId, $title, $body);
     }
 
-    public function deletePost($userId) {
+    public function deletePost($userId)
+    {
         if (!isset($_GET['postId']) || !filter_var($_GET['postId'], FILTER_VALIDATE_INT)) {
-            return ['success' => false, 'message' => 'Invalid or missing post ID parameter.'];            
+            return ['success' => false, 'message' => 'Invalid or missing post ID parameter.'];
         }
         $postId = $_GET['postId'];
-        $result = $this->postModel->deletePost($userId, $postId);
-        return $result;
+        return $this->postService->deletePost($userId, $postId);
     }
 }
 ?>
