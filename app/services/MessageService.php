@@ -43,5 +43,10 @@ class MessageService
             return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
         }
     }
+
+    public function getInbox(int $userId): array
+    {
+        return $this->messageRepository->getRecentConversations($userId);
+    }
 }
 ?>

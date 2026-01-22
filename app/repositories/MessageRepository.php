@@ -38,5 +38,52 @@ class MessageRepository
         }
     }
 
+    public function getRecentConversations(int $userId): array
+    {
+        try {
+            $query = "
+                SELECT 
+                    u.id as user_id,
+                    u.username,
+                    u.profile_pic_path,
+                    m.content as last_message,
+                    m.created_at as last_message_time,
+                    m.is_read
+                FROM Messages m
+                JOIN Users u ON (
+                    CASE 
+                        WHEN m.sender_id = :uid1 THEN m.receiver_id 
+                        ELSE m.sender_id 
+                    END = u.id
+                )
+                WHERE (m.sender_id = :uid2 OR m.receiver_id = :uid3)
+                AND m.id IN (
+                    SELECT MAX(m2.id)
+                    FROM Messages m2
+                    WHERE (m2.sender_id = :uid4 OR m2.receiver_id = :uid5)
+                    GROUP BY 
+                        CASE 
+                            WHEN m2.sender_id = :uid6 THEN m2.receiver_id 
+                            ELSE m2.sender_id 
+                        END
+                )
+                ORDER BY m.created_at DESC
+            ";
+
+            $stmt = $this->dbConnection->prepare($query);
+            $stmt->bindParam(':uid1', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':uid2', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':uid3', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':uid4', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':uid5', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':uid6', $userId, PDO::PARAM_INT);
+            $stmt->execute();
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log($e->getMessage());
+            return [];
+        }
+    }
 }
 ?>

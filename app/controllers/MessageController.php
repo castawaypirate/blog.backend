@@ -15,5 +15,11 @@ class MessageController extends BaseController
     {
         return $this->messageService->sendMessage($senderId, $request);
     }
+
+    public function getInbox($userId)
+    {
+        $conversations = $this->messageService->getInbox($userId);
+        return ['success' => true, 'conversations' => $conversations];
+    }
 }
 ?>
