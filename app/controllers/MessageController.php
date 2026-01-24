@@ -21,5 +21,16 @@ class MessageController extends BaseController
         $conversations = $this->messageService->getInbox($userId);
         return ['success' => true, 'conversations' => $conversations];
     }
+
+    public function getConversation($userId)
+    {
+        if (!isset($_GET['otherUserId'])) {
+            return ['success' => false, 'message' => 'otherUserId is required'];
+        }
+        $otherUserId = intval($_GET['otherUserId']);
+
+        $messages = $this->messageService->getConversation($userId, $otherUserId);
+        return ['success' => true, 'messages' => $messages];
+    }
 }
 ?>

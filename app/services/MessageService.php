@@ -48,5 +48,31 @@ class MessageService
     {
         return $this->messageRepository->getRecentConversations($userId);
     }
+
+    public function getConversation(int $userId, int $otherUserId): array
+    {
+        if ($userId == $otherUserId) {
+            // Although Repository handles queries, logical validation belongs here.
+            // You can view your own messages if you really want, but usually a "conversation" implies two people.
+            // For now allowing it, or we could block. Let's allow fetching conversation with oneself if it exists.
+        }
+
+        $messages = $this->messageRepository->getConversation($userId, $otherUserId);
+
+        // Convert Message objects to arrays for JSON response
+        $data = [];
+        foreach ($messages as $message) {
+            $data[] = [
+                'id' => $message->getId(),
+                'sender_id' => $message->getSenderId(),
+                'receiver_id' => $message->getReceiverId(),
+                'content' => $message->getContent(),
+                'is_read' => $message->isRead(), // Assuming getter exists, otherwise standard property access if public
+                'created_at' => $message->getCreatedAt()
+            ];
+        }
+
+        return $data;
+    }
 }
 ?>

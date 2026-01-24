@@ -7,15 +7,17 @@ class Message implements JsonSerializable
     private $receiverId;
     private $content;
     private $createdAt;
+    private $isRead;
     private $senderName; // Optional, for display purposes
 
-    public function __construct($id = null, $senderId, $receiverId, $content, $createdAt = null, $senderName = null)
+    public function __construct($id = null, $senderId, $receiverId, $content, $createdAt = null, $isRead = 0, $senderName = null)
     {
         $this->id = $id;
         $this->senderId = $senderId;
         $this->receiverId = $receiverId;
         $this->content = $content;
         $this->createdAt = $createdAt;
+        $this->isRead = $isRead;
         $this->senderName = $senderName;
     }
 
@@ -39,6 +41,10 @@ class Message implements JsonSerializable
     {
         return $this->createdAt;
     }
+    public function isRead()
+    {
+        return $this->isRead;
+    }
     public function getSenderName()
     {
         return $this->senderName;
@@ -52,6 +58,7 @@ class Message implements JsonSerializable
             'receiver_id' => $this->receiverId,
             'content' => $this->content,
             'created_at' => $this->createdAt,
+            'is_read' => $this->isRead,
             'sender_name' => $this->senderName
         ];
     }

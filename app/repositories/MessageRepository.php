@@ -85,5 +85,48 @@ class MessageRepository
             return [];
         }
     }
+
+    public function getConversation(int $userId, int $otherUserId): array
+    {
+        try {
+            $query = "
+                SELECT 
+                    m.id,
+                    m.sender_id,
+                    m.receiver_id,
+                    m.content,
+                    m.is_read,
+                    m.created_at
+                FROM " . $this->table . " m
+                WHERE (m.sender_id = :uid1 AND m.receiver_id = :otherUid1)
+                   OR (m.sender_id = :otherUid2 AND m.receiver_id = :uid2)
+                ORDER BY m.created_at ASC
+            ";
+
+            $stmt = $this->dbConnection->prepare($query);
+            $stmt->bindParam(':uid1', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':otherUid1', $otherUserId, PDO::PARAM_INT);
+            $stmt->bindParam(':otherUid2', $otherUserId, PDO::PARAM_INT);
+            $stmt->bindParam(':uid2', $userId, PDO::PARAM_INT);
+            $stmt->execute();
+
+            $messages = [];
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $messages[] = new Message(
+                    $row['id'],
+                    $row['sender_id'],
+                    $row['receiver_id'],
+                    $row['content'],
+                    $row['created_at'],
+                    $row['is_read']
+                );
+            }
+
+            return $messages;
+        } catch (PDOException $e) {
+            error_log($e->getMessage());
+            return [];
+        }
+    }
 }
 ?>
