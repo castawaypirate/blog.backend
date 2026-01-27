@@ -186,6 +186,25 @@ class UserRepository
         }
     }
 
+    public function searchUsers(string $query, int $excludeUserId): array
+    {
+        try {
+            $sql = "SELECT id, username, profile_pic_path, profile_pic_mime_type FROM " . $this->table . " 
+                    WHERE username LIKE :query AND id != :excludeUserId AND deleted_at IS NULL
+                    LIMIT 20";
+            $stmt = $this->dbConnection->prepare($sql);
+            $searchTerm = "%" . $query . "%";
+            $stmt->bindParam(':query', $searchTerm, PDO::PARAM_STR);
+            $stmt->bindParam(':excludeUserId', $excludeUserId, PDO::PARAM_INT);
+            $stmt->execute();
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log($e->getMessage());
+            return [];
+        }
+    }
+
     private function mapRowToUser(array $row): User
     {
         return new User(

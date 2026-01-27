@@ -602,6 +602,26 @@ route('/api/messages/conversation', function () use ($messageController, $userCo
     }
 });
 
+route('/api/users/search', function () use ($userController) {
+    $request = validateRequest('GET', 'JSON', 'Bearer', 'searchUsers');
+    if ($request) {
+        $validation = $userController->validateUser();
+        if ($validation['success']) {
+            $userId = $validation['user']->user_id;
+            $result = $userController->searchUsers($userId);
+        } else {
+            $result = $validation;
+        }
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
 route('/api/users/delete', function () use ($userController) {
     $request = validateRequest('PUT', '', 'Bearer', 'delete');
     if ($request) {
@@ -739,6 +759,9 @@ function validateRequest($requestMethod, $contentType = '', $authorization = '',
             return true;
         }
         if ($endpoint === 'getConversation') {
+            return true;
+        }
+        if ($endpoint === 'searchUsers') {
             return true;
         }
     }

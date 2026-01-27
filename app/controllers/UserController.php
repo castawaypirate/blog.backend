@@ -125,5 +125,14 @@ class UserController extends BaseController
     {
         return $this->userService->deleteUser($userId);
     }
+
+    public function searchUsers($userId)
+    {
+        if (!isset($_GET['query'])) {
+            return ['success' => false, 'message' => 'Query parameter is required.'];
+        }
+        $query = $_GET['query'];
+        return $this->userService->searchUsers($query, $userId);
+    }
 }
 ?>

@@ -263,4 +263,10 @@ class UserService
         }
         return ['success' => false, 'message' => 'Failed to mark user as deleted.'];
     }
+
+    public function searchUsers(string $query, int $currentUserId): array
+    {
+        $users = $this->userRepository->searchUsers($query, $currentUserId);
+        return ['success' => true, 'users' => $users];
+    }
 }
