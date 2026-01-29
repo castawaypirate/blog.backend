@@ -14,23 +14,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 header('Content-Type: application/json');
 
-require_once('app/controllers/UserController.php');
 require_once('app/middleware/JwtMiddleware.php');
+require_once('app/controllers/UserController.php');
 require_once('app/controllers/PostController.php');
 require_once('app/controllers/CommentController.php');
 require_once('app/controllers/MessageController.php');
-require_once('app/repositories/UserRepository.php');
 require_once('app/services/UserService.php');
-require_once('app/services/CommentService.php');
 require_once('app/services/PostService.php');
+require_once('app/services/CommentService.php');
+require_once('app/repositories/UserRepository.php');
+require_once('app/repositories/MessageRepository.php');
 require_once('app/services/CommentService.php');
 require_once('app/db/database.php');
 
 $database = new Database();
 $dbConnection = $database->getConnection();
-
 $userRepository = new UserRepository($dbConnection);
-$userService = new UserService($userRepository);
+$messageRepository = new MessageRepository($dbConnection);
+$userService = new UserService($userRepository, $messageRepository);
 $userController = new UserController($userService);
 
 $commentService = new CommentService($dbConnection);

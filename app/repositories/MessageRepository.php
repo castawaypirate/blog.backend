@@ -128,5 +128,18 @@ class MessageRepository
             return [];
         }
     }
+    public function hasSentMessages(int $userId): bool
+    {
+        try {
+            $query = "SELECT 1 FROM " . $this->table . " WHERE sender_id = :userId LIMIT 1";
+            $stmt = $this->dbConnection->prepare($query);
+            $stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
+            $stmt->execute();
+            return (bool) $stmt->fetchColumn();
+        } catch (PDOException $e) {
+            error_log($e->getMessage());
+            return false;
+        }
+    }
 }
 ?>

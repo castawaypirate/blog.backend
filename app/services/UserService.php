@@ -7,11 +7,13 @@ require_once __DIR__ . '/../utils/jwt_helper.php';
 class UserService
 {
     private $userRepository;
+    private $messageRepository;
     private $userDeletionDelay;
 
-    public function __construct(UserRepository $userRepository)
+    public function __construct(UserRepository $userRepository, MessageRepository $messageRepository)
     {
         $this->userRepository = $userRepository;
+        $this->messageRepository = $messageRepository;
         // Hardcoded dependency from config constant, could be injected but fine for now
         $this->userDeletionDelay = defined('USER_DELETION_DELAY') ? USER_DELETION_DELAY : 7200;
     }
@@ -85,10 +87,17 @@ class UserService
     {
         $user = $this->userRepository->findById($userId);
         if ($user) {
+            $hasSentMessages = $this->messageRepository->hasSentMessages($userId);
             // mimic old response structure: ['success'=>true, 'user'=> ['username'=>...]]
             // Old `getUserData` only returned username?
             // Checking old code: `SELECT username FROM Users...`
-            return ['success' => true, 'user' => ['username' => $user->getUsername()]];
+            return [
+                'success' => true,
+                'user' => [
+                    'username' => $user->getUsername(),
+                    'has_sent_messages' => $hasSentMessages
+                ]
+            ];
         }
         return ['success' => false, 'message' => 'User not found.'];
     }
