@@ -29,7 +29,6 @@ class CommentService
         try {
             $this->dbConnection->beginTransaction();
 
-            // Rate limiting check
             $lastComment = $this->commentRepository->getLastCommentByUserId($userId);
             if ($lastComment) {
                 $lastCommentTime = new DateTime($lastComment['created_at']);
@@ -40,12 +39,6 @@ class CommentService
                 }
             }
 
-            // Check post existence - In a pure separation, we might want a PostService, 
-            // but checking DB directly via a query here or injecting PostRepository would be better.
-            // For now, let's assume valid post ID or add a check if strict. 
-            // The original code did: "SELECT * FROM Posts WHERE id = :postId"
-            // We should replicate that check. Simple raw query here or duplicate repo logic?
-            // Let's do it cleanly:
             $checkPostSql = "SELECT COUNT(*) FROM Posts WHERE id = :postId";
             $checkPostStmt = $this->dbConnection->prepare($checkPostSql);
             $checkPostStmt->bindParam(':postId', $postId, PDO::PARAM_INT);
@@ -77,8 +70,6 @@ class CommentService
         }
         try {
             $comments = $this->commentRepository->getPostComments($postId);
-            // Convert objects to arrays for response (or keep as objects if json_encode handles it)
-            // Comment implements JsonSerializable so it should be fine.
             if (empty($comments)) {
                 return ['success' => true, 'message' => 'No comments found', 'comments' => []];
             }
@@ -106,10 +97,6 @@ class CommentService
 
     public function editComment($userId, $request)
     {
-        // Extraction logic from Controller needs to be passed in or handled. 
-        // Controller passed $request.
-        // Controller checked for commentID param. 
-
         if (!isset($_GET['commentId']) || !filter_var($_GET['commentId'], FILTER_VALIDATE_INT)) {
             return ['success' => false, 'message' => 'Invalid or missing comment ID parameter.'];
         }
@@ -181,7 +168,6 @@ class CommentService
         try {
             $this->dbConnection->beginTransaction();
 
-            // Check existence
             $comment = $this->commentRepository->getByIdAndPostId($commentId, $postId);
             if (!$comment) {
                 throw new Exception("Comment ID or Post ID does not exist.");
@@ -192,33 +178,33 @@ class CommentService
             $message = [];
 
             if ($action === 'upvote') {
-                if ($currentVote === 1) { // Already upvoted, remove it
+                if ($currentVote === 1) {
                     $this->commentRepository->deleteVote($userId, $commentId, 1);
                     $this->commentRepository->decrementUpvotes($commentId);
                     $message = ['success' => true, 'action' => 'unvote', 'message' => 'User successfully unvoted the comment.'];
-                } elseif ($currentVote === -1) { // Was downvoted, switch to upvote
+                } elseif ($currentVote === -1) {
                     $this->commentRepository->deleteVote($userId, $commentId, -1);
                     $this->commentRepository->decrementDownvotes($commentId);
                     $this->commentRepository->addVote($userId, $commentId, 1);
                     $this->commentRepository->incrementUpvotes($commentId);
                     $message = ['success' => true, 'action' => 'delete/upvote', 'message' => 'User\'s downvote was deleted. User successfully upvoted the comment.'];
-                } else { // No vote, add upvote
+                } else {
                     $this->commentRepository->addVote($userId, $commentId, 1);
                     $this->commentRepository->incrementUpvotes($commentId);
                     $message = ['success' => true, 'action' => 'upvote', 'message' => 'User successfully upvoted the comment.'];
                 }
-            } else { // downvote
-                if ($currentVote === -1) { // Already downvoted, remove it
+            } else {
+                if ($currentVote === -1) {
                     $this->commentRepository->deleteVote($userId, $commentId, -1);
                     $this->commentRepository->decrementDownvotes($commentId);
                     $message = ['success' => true, 'action' => 'unvote', 'message' => 'User successfully unvoted the comment.'];
-                } elseif ($currentVote === 1) { // Was upvoted, switch to downvote
+                } elseif ($currentVote === 1) {
                     $this->commentRepository->deleteVote($userId, $commentId, 1);
                     $this->commentRepository->decrementUpvotes($commentId);
                     $this->commentRepository->addVote($userId, $commentId, -1);
                     $this->commentRepository->incrementDownvotes($commentId);
                     $message = ['success' => true, 'action' => 'delete/downvote', 'message' => 'User\'s upvote was deleted. User successfully downvoted the comment.'];
-                } else { // No vote, add downvote
+                } else {
                     $this->commentRepository->addVote($userId, $commentId, -1);
                     $this->commentRepository->incrementDownvotes($commentId);
                     $message = ['success' => true, 'action' => 'downvote', 'message' => 'User successfully downvoted the comment.'];

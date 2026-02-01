@@ -28,12 +28,6 @@ class MessageRepository
 
             return $stmt->execute();
         } catch (PDOException $e) {
-            // Log error or rethrow depending on error handling strategy. 
-            // For now returning false to match previous behavior or we can throw.
-            // But Service expects bool or we can let exception bubble up.
-            // Let's log and return false for specific DB errors if needed, 
-            // but standard PDO exception handling is usually better.
-            // We will let the exception bubble up to be caught by the service or controller.
             throw $e;
         }
     }

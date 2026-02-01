@@ -7,17 +7,19 @@ class Comment implements JsonSerializable
     private $postId;
     private $body;
     private $createdAt;
+    private $updatedAt;
     private $upvotes;
     private $downvotes;
     private $username; // Optional, for display purposes
 
-    public function __construct($id = null, $userId, $postId, $body, $createdAt = null, $upvotes = 0, $downvotes = 0, $username = null)
+    public function __construct($id = null, $userId, $postId, $body, $createdAt = null, $updatedAt = null, $upvotes = 0, $downvotes = 0, $username = null)
     {
         $this->id = $id;
         $this->userId = $userId;
         $this->postId = $postId;
         $this->body = $body;
         $this->createdAt = $createdAt;
+        $this->updatedAt = $updatedAt;
         $this->upvotes = $upvotes;
         $this->downvotes = $downvotes;
         $this->username = $username;
@@ -43,6 +45,10 @@ class Comment implements JsonSerializable
     {
         return $this->createdAt;
     }
+    public function getUpdatedAt()
+    {
+        return $this->updatedAt;
+    }
     public function getUpvotes()
     {
         return $this->upvotes;
@@ -64,6 +70,7 @@ class Comment implements JsonSerializable
             'post_id' => $this->postId,
             'body' => $this->body,
             'created_at' => $this->createdAt,
+            'updated_at' => $this->updatedAt,
             'upvotes' => $this->upvotes,
             'downvotes' => $this->downvotes,
             'username' => $this->username

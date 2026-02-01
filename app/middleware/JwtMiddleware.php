@@ -1,17 +1,19 @@
 <?php
 
-require_once __DIR__.'/../utils/jwt_helper.php';
+require_once __DIR__ . '/../utils/jwt_helper.php';
 
 
 class JWTMiddleware
 {
     private $secretKey;
 
-    public function __construct($secretKey) {
+    public function __construct($secretKey)
+    {
         $this->secretKey = $secretKey;
     }
 
-    public function validateToken() {
+    public function validateToken()
+    {
         $authorizationHeader = null;
         if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
             $authorizationHeader = $_SERVER['HTTP_AUTHORIZATION'];
@@ -33,7 +35,8 @@ class JWTMiddleware
         }
     }
 
-    private static function sendErrorResponse($message) {
+    private static function sendErrorResponse($message)
+    {
         header('Content-Type: application/json');
         http_response_code(401);
         echo json_encode(['success' => false, 'message' => $message]);

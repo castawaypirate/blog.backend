@@ -56,6 +56,7 @@ class CommentRepository
                 $row['post_id'],
                 $row['body'],
                 $row['created_at'],
+                $row['updated_at'],
                 $row['upvotes'],
                 $row['downvotes'],
                 $row['username']
@@ -79,6 +80,7 @@ class CommentRepository
                 $row['post_id'],
                 $row['body'],
                 $row['created_at'],
+                $row['updated_at'],
                 $row['upvotes'],
                 $row['downvotes']
             );
@@ -102,6 +104,7 @@ class CommentRepository
                 $row['post_id'],
                 $row['body'],
                 $row['created_at'],
+                $row['updated_at'],
                 $row['upvotes'],
                 $row['downvotes']
             );
@@ -136,7 +139,6 @@ class CommentRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Vote related methods
     public function getVote($userId, $commentId)
     {
         $sql = "SELECT vote_type FROM CommentVotes WHERE user_id = :userId AND comment_id = :commentId";
@@ -149,7 +151,7 @@ class CommentRepository
         if ($row) {
             return (int) $row['vote_type'];
         }
-        return 0; // No vote
+        return 0;
     }
 
     public function deleteVote($userId, $commentId, $voteType)

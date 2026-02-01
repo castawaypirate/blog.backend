@@ -25,7 +25,6 @@ class PostService
         try {
             $this->dbConnection->beginTransaction();
 
-            // Rate limiting check (10 minutes)
             $lastPost = $this->postRepository->getLastPostByUserId($userId);
             if ($lastPost) {
                 $lastPostTime = new DateTime($lastPost['created_at']);
@@ -133,7 +132,6 @@ class PostService
         try {
             $post = $this->postRepository->getById($postId);
             if ($post) {
-                // Return array representation of the post DTO
                 return ['success' => true, 'post' => $post->jsonSerialize()];
             } else {
                 return ['success' => false, 'message' => 'postId not found'];
@@ -204,8 +202,6 @@ class PostService
         try {
             $this->dbConnection->beginTransaction();
 
-            // Should check existence of post first? 
-            // The logic in getExistingVote (in repo) or getById can verify post existence.
             $post = $this->postRepository->getById($postId);
             if (!$post) {
                 throw new Exception("Post ID does not exist.");
@@ -230,7 +226,7 @@ class PostService
                     $this->postRepository->incrementUpvotes($postId);
                     $message = ['success' => true, 'action' => 'upvote', 'message' => 'User successfully upvoted the post.'];
                 }
-            } else { // downvote
+            } else {
                 if ($currentVote === -1) {
                     $this->postRepository->deleteVote($userId, $postId, -1);
                     $this->postRepository->decrementDownvotes($postId);

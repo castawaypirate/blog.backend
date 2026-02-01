@@ -104,8 +104,6 @@ route('/api/posts/create', function () use ($postController, $userController) {
             $userId = $user->user_id;
             $result = $postController->createPost($userId, $request);
         }
-        // this is outside the if, so if $success is false, it will return the $result from token validation
-        // otherwise, it will return the $result of the controller function.
         $jsonResult = json_encode($result);
         header('Content-Type: application/json; charset=utf-8');
         echo $jsonResult;
@@ -769,7 +767,7 @@ function validateRequest($requestMethod, $contentType = '', $authorization = '',
 
     if ($requestMethod === 'POST') {
         if ($endpoint === 'sendMessage') {
-            return $data ?? true; // Just return true or data for validation success
+            return $data ?? true; // just return true or data for validation success
         }
         if ($endpoint === 'uploadProfilePic') {
             if ($contentType === 'FORM_DATA') {

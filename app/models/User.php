@@ -68,9 +68,6 @@ class User implements JsonSerializable
             'id' => $this->id,
             'username' => $this->username,
             'email' => $this->email,
-            // Password should not be exposed in JSON usually, 
-            // but the original model didn't have jsonSerialize so it wasn't solving this.
-            // I'll exclude password here for safety.
             'created_at' => $this->createdAt,
             'last_login' => $this->lastLogin,
             'profile_pic_path' => $this->profilePicPath,

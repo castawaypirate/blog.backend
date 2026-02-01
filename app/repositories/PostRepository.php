@@ -121,7 +121,6 @@ class PostRepository
         return $stmt->execute();
     }
 
-    // Vote methods
     public function getVote($userId, $postId)
     {
         $sql = "SELECT vote_type FROM PostVotes WHERE user_id = :userId AND post_id = :postId";

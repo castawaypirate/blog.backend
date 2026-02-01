@@ -22,15 +22,7 @@ class UserController extends BaseController
 
     public function validateUser()
     {
-        // Keeping existing middleware logic which was here.
-        // But since this method was just calling middleware, we can keep it as is.
-        // Wait, the existing code:
-        /*
-        $jwtMiddleware = new JWTMiddleware(JWTHelper::getSecretKey());
-        $result = $jwtMiddleware->validateToken();
-        return $result;
-        */
-        // I need to make sure JWTMiddleware is available.
+        // need to make sure JWTMiddleware is available.
         require_once __DIR__ . '/../middleware/JwtMiddleware.php';
         $jwtMiddleware = new JWTMiddleware(JWTHelper::getSecretKey());
         $result = $jwtMiddleware->validateToken();

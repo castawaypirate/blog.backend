@@ -9,7 +9,7 @@ class Post implements JsonSerializable
     private $createdAt;
     private $upvotes;
     private $downvotes;
-    private $username; // Optional, for display
+    private $username;
 
     public function __construct($id = null, $userId, $title, $body, $createdAt = null, $upvotes = 0, $downvotes = 0, $username = null)
     {

@@ -8,7 +8,7 @@ class Message implements JsonSerializable
     private $content;
     private $createdAt;
     private $isRead;
-    private $senderName; // Optional, for display purposes
+    private $senderName;
 
     public function __construct($id = null, $senderId, $receiverId, $content, $createdAt = null, $isRead = 0, $senderName = null)
     {

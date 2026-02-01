@@ -14,7 +14,6 @@ class UserService
     {
         $this->userRepository = $userRepository;
         $this->messageRepository = $messageRepository;
-        // Hardcoded dependency from config constant, could be injected but fine for now
         $this->userDeletionDelay = defined('USER_DELETION_DELAY') ? USER_DELETION_DELAY : 7200;
     }
 
@@ -23,9 +22,7 @@ class UserService
         $user = $this->userRepository->findByUsername($username);
 
         if ($user) {
-            // Login Flow
             if (password_verify($password, $user->getPassword())) {
-                // Update login stats
                 $this->userRepository->updateLastLogin($user->getId());
                 $this->userRepository->undoDeletion($user->getId());
 
@@ -39,18 +36,11 @@ class UserService
             }
         }
 
-        // Registration Flow
-        // Note: Password hashing happens here before creating the entity or inside entity/repo?
-        // Old code hashed in `addUser`.
-        // We should hash here or in the repo. The plan says "pure entity", so maybe entity stores hashed password?
-        // Let's hash here.
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-        // ID is null initially
         $newUser = new User(null, $username, $email, $hashedPassword);
 
         if ($this->userRepository->create($newUser)) {
-            // Retrieve formatted user to get ID
             $user = $this->userRepository->findByUsername($username);
             $token = JWTHelper::generateToken(['user_id' => $user->getId(), 'username' => $user->getUsername()]);
 
@@ -65,21 +55,6 @@ class UserService
 
     public function validateUser(): array
     {
-        // Re-using the middleware logic invoked in controller currently.
-        // Actually, the controller instantiated JWTMiddleware.
-        // It might be better to keep that in Controller or move check here.
-        // For strict service pattern, Controller should call Service to get domain objects.
-        // But `validateUser` in Controller calls `JWTMiddleware`.
-        // Let's replicate what the Controller did:
-        // $jwtMiddleware = new JWTMiddleware(JWTHelper::getSecretKey());
-        // $result = $jwtMiddleware->validateToken();
-        // Since JWTMiddleware is arguably a cross-cutting concern, calling it here or in Controller is debatable.
-        // But the previous `UserController::validateUser` was just a wrapper.
-        // We will leave the middleware usage in the controller or assume the controller passed the validated user ID.
-        // Wait, the previous controller called `$this->userModel` methods AFTER verifying token.
-        // The `validateUser` method in `UserController` was just a helper to call the middleware.
-        // We can leave `validateUser` in the Controller or a base helper.
-        // I will skipping implementing `validateUser` here as it belongs to Middleware/Controller layer.
         return [];
     }
 
@@ -88,9 +63,6 @@ class UserService
         $user = $this->userRepository->findById($userId);
         if ($user) {
             $hasSentMessages = $this->messageRepository->hasSentMessages($userId);
-            // mimic old response structure: ['success'=>true, 'user'=> ['username'=>...]]
-            // Old `getUserData` only returned username?
-            // Checking old code: `SELECT username FROM Users...`
             return [
                 'success' => true,
                 'user' => [
@@ -104,8 +76,6 @@ class UserService
 
     public function uploadProfilePic(int $userId, array $file): array
     {
-        // Logic from User::uploadProfilePic
-        // Requires transaction usually, but here handled by rollback logic.
         $uploads = defined('ROOT_DIR') ? ROOT_DIR . '/uploads/' : __DIR__ . '/../../uploads/';
 
         $user = $this->userRepository->findById($userId);
@@ -117,20 +87,13 @@ class UserService
         $currentPath = $user->getProfilePicPath();
 
         $newProfilePicExtension = pathinfo($file['name'], PATHINFO_EXTENSION);
-        // Naming strategy: username/filename
 
-        // Create directory
         $userDirectory = $uploads . $username;
         if (!is_dir($userDirectory)) {
             if (!mkdir($userDirectory, 0777, true)) {
                 return ['success' => false, 'message' => 'Failed to create user directory.'];
             }
         }
-
-        // Backup existing logic (simulated from old code)
-        // Old code renamed existing pic to '...1.ext' to backup.
-        // Simplified Logic: Just overwrite? Old code did complex rename/rollback.
-        // I'll try to replicate the safety logic.
 
         $tempBackupPath = null;
         $fullCurrentPath = $currentPath ? $uploads . $currentPath : null;
@@ -146,23 +109,19 @@ class UserService
         $destination = $uploads . $shortPath;
 
         if (!move_uploaded_file($file['tmp_name'], $destination)) {
-            // Restore backup
             if ($tempBackupPath) {
                 rename($tempBackupPath, $fullCurrentPath);
             }
             return ['success' => false, 'message' => 'Can\'t move uploaded file.'];
         }
 
-        // DB Update
         if ($this->userRepository->updateProfilePic($userId, $shortPath, $file['type'])) {
-            // Success, remove backup
             if ($tempBackupPath) {
                 unlink($tempBackupPath);
             }
             return ['success' => true, 'message' => 'File is uploaded.'];
         } else {
-            // DB Failed, rollback file
-            unlink($destination); // delete new file
+            unlink($destination);
             if ($tempBackupPath) {
                 rename($tempBackupPath, $fullCurrentPath);
             }
