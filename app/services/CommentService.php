@@ -116,7 +116,12 @@ class CommentService
             }
 
             if ($this->commentRepository->update($commentId, $body)) {
-                return ['success' => true, 'message' => 'Comment updated successfully.'];
+                $updatedComment = $this->commentRepository->getById($commentId);
+                return [
+                    'success' => true,
+                    'message' => 'Comment updated successfully.',
+                    'updated_at' => $updatedComment ? $updatedComment->getUpdatedAt() : null
+                ];
             } else {
                 return ['success' => false, 'message' => 'Error updating the comment.'];
             }

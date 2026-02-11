@@ -176,7 +176,7 @@ class CommentRepository
 
     public function incrementUpvotes($commentId)
     {
-        $sql = "UPDATE Comments SET upvotes = upvotes + 1 WHERE id = :commentId";
+        $sql = "UPDATE Comments SET upvotes = upvotes + 1, updated_at = updated_at WHERE id = :commentId";
         $stmt = $this->dbConnection->prepare($sql);
         $stmt->bindParam(':commentId', $commentId, PDO::PARAM_INT);
         return $stmt->execute();
@@ -184,7 +184,7 @@ class CommentRepository
 
     public function decrementUpvotes($commentId)
     {
-        $sql = "UPDATE Comments SET upvotes = upvotes - 1 WHERE id = :commentId";
+        $sql = "UPDATE Comments SET upvotes = upvotes - 1, updated_at = updated_at WHERE id = :commentId";
         $stmt = $this->dbConnection->prepare($sql);
         $stmt->bindParam(':commentId', $commentId, PDO::PARAM_INT);
         return $stmt->execute();
@@ -192,7 +192,7 @@ class CommentRepository
 
     public function incrementDownvotes($commentId)
     {
-        $sql = "UPDATE Comments SET downvotes = downvotes + 1 WHERE id = :commentId";
+        $sql = "UPDATE Comments SET downvotes = downvotes + 1, updated_at = updated_at WHERE id = :commentId";
         $stmt = $this->dbConnection->prepare($sql);
         $stmt->bindParam(':commentId', $commentId, PDO::PARAM_INT);
         return $stmt->execute();
@@ -200,7 +200,7 @@ class CommentRepository
 
     public function decrementDownvotes($commentId)
     {
-        $sql = "UPDATE Comments SET downvotes = downvotes - 1 WHERE id = :commentId";
+        $sql = "UPDATE Comments SET downvotes = downvotes - 1, updated_at = updated_at WHERE id = :commentId";
         $stmt = $this->dbConnection->prepare($sql);
         $stmt->bindParam(':commentId', $commentId, PDO::PARAM_INT);
         return $stmt->execute();
