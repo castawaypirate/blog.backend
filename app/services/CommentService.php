@@ -48,7 +48,7 @@ class CommentService
                 return ['success' => false, 'message' => 'Something\'s wrong with the post ID.'];
             }
 
-            $comment = new Comment(null, $userId, $postId, $body);
+            $comment = new Comment($userId, $postId, $body);
             if ($this->commentRepository->create($comment)) {
                 $this->dbConnection->commit();
                 return ['success' => true, 'message' => 'Comment created successfully.'];

@@ -12,7 +12,7 @@ class Comment implements JsonSerializable
     private $downvotes;
     private $username; // Optional, for display purposes
 
-    public function __construct($id = null, $userId, $postId, $body, $createdAt = null, $updatedAt = null, $upvotes = 0, $downvotes = 0, $username = null)
+    public function __construct($userId, $postId, $body, $createdAt = null, $updatedAt = null, $upvotes = 0, $downvotes = 0, $username = null, $id = null)
     {
         $this->id = $id;
         $this->userId = $userId;

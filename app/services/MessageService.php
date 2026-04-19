@@ -30,7 +30,7 @@ class MessageService
         }
 
         try {
-            $message = new Message(null, $senderId, $receiverId, $content, null);
+            $message = new Message($senderId, $receiverId, $content);
             $success = $this->messageRepository->create($message);
 
             if ($success) {

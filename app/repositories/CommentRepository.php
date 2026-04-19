@@ -51,7 +51,6 @@ class CommentRepository
         $comments = [];
         foreach ($results as $row) {
             $comments[] = new Comment(
-                $row['id'],
                 $row['user_id'],
                 $row['post_id'],
                 $row['body'],
@@ -59,7 +58,8 @@ class CommentRepository
                 $row['updated_at'],
                 $row['upvotes'],
                 $row['downvotes'],
-                $row['username']
+                $row['username'],
+                $row['id']
             );
         }
         return $comments;
@@ -75,14 +75,15 @@ class CommentRepository
 
         if ($row) {
             return new Comment(
-                $row['id'],
                 $row['user_id'],
                 $row['post_id'],
                 $row['body'],
                 $row['created_at'],
                 $row['updated_at'],
                 $row['upvotes'],
-                $row['downvotes']
+                $row['downvotes'],
+                null,
+                $row['id']
             );
         }
         return null;
@@ -99,14 +100,15 @@ class CommentRepository
 
         if ($row) {
             return new Comment(
-                $row['id'],
                 $row['user_id'],
                 $row['post_id'],
                 $row['body'],
                 $row['created_at'],
                 $row['updated_at'],
                 $row['upvotes'],
-                $row['downvotes']
+                $row['downvotes'],
+                null,
+                $row['id']
             );
         }
         return null;

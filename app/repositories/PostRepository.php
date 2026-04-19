@@ -91,13 +91,14 @@ class PostRepository
 
         if ($row) {
             return new Post(
-                $row['id'],
                 $row['user_id'],
                 $row['title'],
                 $row['body'],
                 $row['created_at'],
                 $row['upvotes'],
-                $row['downvotes']
+                $row['downvotes'],
+                null,
+                $row['id']
             );
         }
         return null;

@@ -11,7 +11,7 @@ class Post implements JsonSerializable
     private $downvotes;
     private $username;
 
-    public function __construct($id = null, $userId, $title, $body, $createdAt = null, $upvotes = 0, $downvotes = 0, $username = null)
+    public function __construct($userId, $title, $body, $createdAt = null, $upvotes = 0, $downvotes = 0, $username = null, $id = null)
     {
         $this->id = $id;
         $this->userId = $userId;

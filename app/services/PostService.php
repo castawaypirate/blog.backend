@@ -35,7 +35,7 @@ class PostService
                 }
             }
 
-            $post = new Post(null, $userId, $title, $body);
+            $post = new Post($userId, $title, $body);
             if ($this->postRepository->create($post)) {
                 $this->dbConnection->commit();
                 return ['success' => true, 'message' => 'Post created successfully.'];

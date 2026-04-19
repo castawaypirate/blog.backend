@@ -107,12 +107,13 @@ class MessageRepository
             $messages = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $messages[] = new Message(
-                    $row['id'],
                     $row['sender_id'],
                     $row['receiver_id'],
                     $row['content'],
                     $row['created_at'],
-                    $row['is_read']
+                    $row['is_read'],
+                    null,
+                    $row['id']
                 );
             }
 
