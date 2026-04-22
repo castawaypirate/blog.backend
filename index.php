@@ -601,6 +601,26 @@ route('/api/messages/conversation', function () use ($messageController, $userCo
     }
 });
 
+route('/api/messages/delete', function () use ($messageController, $userController) {
+    $request = validateRequest('DELETE', 'JSON', 'Bearer', 'deleteMessage');
+    if ($request) {
+        $result = $userController->validateUser();
+        $success = $result['success'];
+        if ($success) {
+            $user = $result['user'];
+            $userId = $user->user_id;
+            $result = $messageController->deleteMessage($userId);
+        }
+        $jsonResult = json_encode($result);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    } else {
+        $jsonResult = json_encode(['success' => false, 'message' => 'Request validation failed.']);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $jsonResult;
+    }
+});
+
 route('/api/users/search', function () use ($userController) {
     $request = validateRequest('GET', 'JSON', 'Bearer', 'searchUsers');
     if ($request) {
@@ -800,6 +820,9 @@ function validateRequest($requestMethod, $contentType = '', $authorization = '',
             return true;
         }
         if ($endpoint === 'deleteProfilePic') {
+            return true;
+        }
+        if ($endpoint === 'deleteMessage') {
             return true;
         }
     }

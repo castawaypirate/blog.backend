@@ -136,5 +136,44 @@ class MessageRepository
             return false;
         }
     }
+
+    public function getById(int $messageId): ?Message
+    {
+        try {
+            $query = "SELECT id, sender_id, receiver_id, content, is_read, created_at FROM " . $this->table . " WHERE id = :id";
+            $stmt = $this->dbConnection->prepare($query);
+            $stmt->bindParam(':id', $messageId, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$row) {
+                return null;
+            }
+            return new Message(
+                $row['sender_id'],
+                $row['receiver_id'],
+                $row['content'],
+                $row['created_at'],
+                $row['is_read'],
+                null,
+                $row['id']
+            );
+        } catch (PDOException $e) {
+            error_log($e->getMessage());
+            return null;
+        }
+    }
+
+    public function delete(int $messageId): bool
+    {
+        try {
+            $query = "DELETE FROM " . $this->table . " WHERE id = :id";
+            $stmt = $this->dbConnection->prepare($query);
+            $stmt->bindParam(':id', $messageId, PDO::PARAM_INT);
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log($e->getMessage());
+            return false;
+        }
+    }
 }
 ?>

@@ -6,9 +6,11 @@ require_once __DIR__ . '/../models/Message.php';
 class MessageService
 {
     private $messageRepository;
+    private $dbConnection;
 
     public function __construct($dbConnection)
     {
+        $this->dbConnection = $dbConnection;
         $this->messageRepository = new MessageRepository($dbConnection);
     }
 
@@ -34,7 +36,14 @@ class MessageService
             $success = $this->messageRepository->create($message);
 
             if ($success) {
-                return ['success' => true, 'message' => 'Message sent successfully.'];
+                $newMessageId = $this->dbConnection->lastInsertId();
+                $newMessage = $this->messageRepository->getById($newMessageId);
+                return [
+                    'success' => true,
+                    'message' => 'Message sent successfully.',
+                    'messageId' => $newMessage->getId(),
+                    'created_at' => $newMessage->getCreatedAt()
+                ];
             } else {
                 return ['success' => false, 'message' => 'Failed to send message.'];
             }
@@ -68,6 +77,28 @@ class MessageService
         }
 
         return $data;
+    }
+
+    public function deleteMessage(int $userId, int $messageId): array
+    {
+        try {
+            $message = $this->messageRepository->getById($messageId);
+            if (!$message) {
+                return ['success' => false, 'message' => 'Message does not exist.'];
+            }
+
+            if ($message->getSenderId() !== $userId) {
+                return ['success' => false, 'message' => 'You do not have permission to delete this message.'];
+            }
+
+            if ($this->messageRepository->delete($messageId)) {
+                return ['success' => true, 'message' => 'Message deleted successfully.'];
+            } else {
+                return ['success' => false, 'message' => 'Error deleting the message.'];
+            }
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+        }
     }
 }
 ?>

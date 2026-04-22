@@ -32,5 +32,14 @@ class MessageController extends BaseController
         $messages = $this->messageService->getConversation($userId, $otherUserId);
         return ['success' => true, 'messages' => $messages];
     }
+
+    public function deleteMessage($userId)
+    {
+        if (!isset($_GET['messageId']) || !filter_var($_GET['messageId'], FILTER_VALIDATE_INT)) {
+            return ['success' => false, 'message' => 'Invalid or missing message ID parameter.'];
+        }
+        $messageId = $_GET['messageId'];
+        return $this->messageService->deleteMessage($userId, $messageId);
+    }
 }
 ?>
