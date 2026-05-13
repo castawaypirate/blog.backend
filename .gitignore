@@ -18,4 +18,7 @@ Thumbs.db
 # Local development files and configurations (optional, add if needed)
 .env
 
+# Maze PGP private key
+.maze_private_key.asc
+
 /uploads/
