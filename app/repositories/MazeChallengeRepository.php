@@ -22,12 +22,17 @@ class MazeChallengeRepository
             $stmt->bindParam(':encrypted_username_msg_id', $encryptedUsernameMsgId);
             $stmt->bindParam(':publicKeyMsgId', $publicKeyMsgId);
 
-            return $stmt->execute();
+            if ($stmt->execute()) {
+                return $this->dbConnection->lastInsertId();
+            }
+            return false;
         } catch (PDOException $e) {
             error_log($e->getMessage());
             return false;
         }
     }
+
+
 
     public function updateStatus($id, $status, $decryptedUsername = null, $errorMessage = null): bool
     {
@@ -76,17 +81,4 @@ class MazeChallengeRepository
         }
     }
 
-    public function storePublicKey($userId, $publicKey): bool
-    {
-        try {
-            $query = "UPDATE " . $this->table . " SET public_key = :public_key WHERE user_id = :user_id";
-            $stmt = $this->dbConnection->prepare($query);
-            $stmt->bindParam(':public_key', $publicKey);
-            $stmt->bindParam(':user_id', $userId);
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
-            return false;
-        }
-    }
 }
