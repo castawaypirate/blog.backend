@@ -22,3 +22,5 @@ Thumbs.db
 .maze_private_key.asc
 
 /uploads/
+# PHPUnit
+.phpunit.cache

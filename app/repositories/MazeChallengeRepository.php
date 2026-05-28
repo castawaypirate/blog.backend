@@ -10,7 +10,7 @@ class MazeChallengeRepository
         $this->dbConnection = $dbConnection;
     }
 
-    public function create($userId, $publicKey, $encryptedUsernameMsgId, $publicKeyMsgId): bool
+    public function create($userId, $publicKey, $encryptedUsernameMsgId, $publicKeyMsgId)
     {
         try {
             $query = "INSERT INTO " . $this->table . " (user_id, public_key, encrypted_username_msg_id, public_key_msg_id) 
