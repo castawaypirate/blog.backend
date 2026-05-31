@@ -341,11 +341,11 @@ class MazeService
             if ($isOverrideMsg && $isOverrideKey) {
                 return "I've updated both your secret message and your Public Key; your new Public Key looks good, but I couldn't decrypt your new secret message. Re-encrypt your username using my public key and try again!";
             } elseif ($isOverrideMsg) {
-                return "I've updated your secret message, but I couldn't decrypt it. Re-encrypt your username using my public key and try again!";
+                return "I've updated your secret message, but I couldn't decrypt it. However, I have your valid Public Key saved! Re-encrypt your username using my public key and try again!";
             } elseif ($isOverrideKey) {
                 return "I've updated your Public Key (it looks good!), but your encrypted message is unreadable—I couldn't decrypt it. Re-encrypt your username using my public key and try again!";
             } else {
-                return "your encrypted message is unreadable—I couldn't decrypt it. Re-encrypt your username using my public key and try again!";
+                return "I've received your Public Key (it looks good!), but your encrypted message is unreadable—I couldn't decrypt it. Re-encrypt your username using my public key and try again!";
             }
         }
 
@@ -356,9 +356,9 @@ class MazeService
             } elseif ($isOverrideMsg) {
                 return "I've updated your secret message; it decrypted successfully, but identity verification failed! Also, your Public Key looks broken too. Make sure you encrypt your actual username, and generate a new key or be certain that you correctly copied it here!";
             } elseif ($isOverrideKey) {
-                return "I've updated your Public Key, but it looks broken, and identity verification failed too! Make sure you encrypt your actual username, and generate a new key or be certain that you correctly copied it here!";
+                return "I've updated your Public Key, but it looks broken! Additionally, your encrypted message still fails identity verification! Fix your encrypted username and generate a new key.";
             } else {
-                return "identity verification failed and your Public Key looks broken too. Make sure you encrypt your actual username, and generate a new key or be certain that you correctly copied it here!";
+                return "Your Public Key looks broken, and your encrypted message fails identity verification! Fix your encrypted username and generate a new key.";
             }
         }
 
@@ -369,9 +369,9 @@ class MazeService
             } elseif ($isOverrideMsg) {
                 return "I've updated your secret message; it decrypted successfully, but identity verification failed! The decrypted content doesn't match your account username. Make sure you encrypt exactly your username—the one you use on this site!";
             } elseif ($isOverrideKey) {
-                return "I've updated your Public Key (it looks good!), but identity verification failed! The decrypted content doesn't match your account username. Make sure you encrypt exactly your username—the one you use on this site!";
+                return "I've updated your Public Key (it looks good!), but your encrypted message still fails identity verification! The decrypted content doesn't match your username. Make sure you encrypt exactly your username!";
             } else {
-                return "identity verification failed! The decrypted content doesn't match your account username. Make sure you encrypt exactly your username—the one you use on this site!";
+                return "I've received your Public Key (it looks good!), but your encrypted message failed identity verification! The decrypted content doesn't match your username. Make sure you encrypt exactly your username!";
             }
         }
 
@@ -382,9 +382,9 @@ class MazeService
             } elseif ($isOverrideMsg) {
                 return "I've updated your secret message (it decrypted successfully and your identity checked out!), but I couldn't encrypt my reply with your Public Key. It looks broken—generate a new one or be certain that you correctly copied your public key to here.";
             } elseif ($isOverrideKey) {
-                return "I've updated your Public Key, but I couldn't encrypt my reply with it. It looks broken—generate a new one or be certain that you correctly copied your public key to here.";
+                return "I've updated your Public Key, but I couldn't encrypt my reply with it. It looks broken! Fortunately, your secret message is still valid and verified. Generate a new key and try again!";
             } else {
-                return "I couldn't encrypt my reply with your Public Key. It looks broken—generate a new one or be certain that you correctly copied your public key to here.";
+                return "Your secret message decrypted successfully and verified your identity, but I couldn't encrypt my reply with your Public Key because it looks broken! Generate a new key and try again!";
             }
         }
 

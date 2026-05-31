@@ -114,7 +114,7 @@ class Phase6BatchingTest extends MazeTestCase
         $this->assertSame('processChallenge', $result);
         $reply = $this->getAdminReplyTo($this->testUserId);
         $this->assertSame(
-            "Your encrypted message is unreadable—I couldn't decrypt it. Re-encrypt your username using my public key and try again!",
+            "I've received your Public Key (it looks good!), but your encrypted message is unreadable—I couldn't decrypt it. Re-encrypt your username using my public key and try again!",
             $reply
         );
     }

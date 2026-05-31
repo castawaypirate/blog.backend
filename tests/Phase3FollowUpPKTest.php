@@ -47,7 +47,7 @@ class Phase3FollowUpPKTest extends MazeTestCase
         $this->assertSame('processChallenge', $result);
         $reply = $this->getAdminReplyTo($this->testUserId);
         $this->assertSame(
-            "Identity verification failed! The decrypted content doesn't match your account username. Make sure you encrypt exactly your username—the one you use on this site!",
+            "I've received your Public Key (it looks good!), but your encrypted message failed identity verification! The decrypted content doesn't match your username. Make sure you encrypt exactly your username!",
             $reply
         );
     }
@@ -65,7 +65,7 @@ class Phase3FollowUpPKTest extends MazeTestCase
         $this->assertSame('processChallenge', $result);
         $reply = $this->getAdminReplyTo($this->testUserId);
         $this->assertSame(
-            "Your encrypted message is unreadable—I couldn't decrypt it. Re-encrypt your username using my public key and try again!",
+            "I've received your Public Key (it looks good!), but your encrypted message is unreadable—I couldn't decrypt it. Re-encrypt your username using my public key and try again!",
             $reply
         );
     }
@@ -87,7 +87,7 @@ class Phase3FollowUpPKTest extends MazeTestCase
         $this->assertSame('processChallenge', $result);
         $reply = $this->getAdminReplyTo($this->testUserId);
         $this->assertSame(
-            "I couldn't encrypt my reply with your Public Key. It looks broken—generate a new one or be certain that you correctly copied your public key to here.",
+            "Your secret message decrypted successfully and verified your identity, but I couldn't encrypt my reply with your Public Key because it looks broken! Generate a new key and try again!",
             $reply
         );
     }
@@ -105,7 +105,7 @@ class Phase3FollowUpPKTest extends MazeTestCase
         $this->assertSame('processChallenge', $result);
         $reply = $this->getAdminReplyTo($this->testUserId);
         $this->assertSame(
-            "Identity verification failed and your Public Key looks broken too. Make sure you encrypt your actual username, and generate a new key or be certain that you correctly copied it here!",
+            "Your Public Key looks broken, and your encrypted message fails identity verification! Fix your encrypted username and generate a new key.",
             $reply
         );
     }

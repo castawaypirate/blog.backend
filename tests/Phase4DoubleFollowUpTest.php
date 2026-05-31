@@ -103,7 +103,7 @@ class Phase4DoubleFollowUpTest extends MazeTestCase
         $this->assertSame('processChallenge', $result);
         $reply = $this->getAdminReplyTo($this->testUserId);
         $this->assertSame(
-            "I've updated your secret message, but I couldn't decrypt it. Re-encrypt your username using my public key and try again!",
+            "I've updated your secret message, but I couldn't decrypt it. However, I have your valid Public Key saved! Re-encrypt your username using my public key and try again!",
             $reply
         );
     }
@@ -159,7 +159,7 @@ class Phase4DoubleFollowUpTest extends MazeTestCase
         $this->assertSame('processChallenge', $result);
         $reply = $this->getAdminReplyTo($this->testUserId);
         $this->assertSame(
-            "I've updated your Public Key (it looks good!), but identity verification failed! The decrypted content doesn't match your account username. Make sure you encrypt exactly your username—the one you use on this site!",
+            "I've updated your Public Key (it looks good!), but your encrypted message still fails identity verification! The decrypted content doesn't match your username. Make sure you encrypt exactly your username!",
             $reply
         );
     }
@@ -191,7 +191,7 @@ class Phase4DoubleFollowUpTest extends MazeTestCase
         $this->assertSame('processChallenge', $result);
         $reply = $this->getAdminReplyTo($this->testUserId);
         $this->assertSame(
-            "I've updated your Public Key, but I couldn't encrypt my reply with it. It looks broken—generate a new one or be certain that you correctly copied your public key to here.",
+            "I've updated your Public Key, but I couldn't encrypt my reply with it. It looks broken! Fortunately, your secret message is still valid and verified. Generate a new key and try again!",
             $reply
         );
     }
@@ -207,7 +207,7 @@ class Phase4DoubleFollowUpTest extends MazeTestCase
         $this->assertSame('processChallenge', $result);
         $reply = $this->getAdminReplyTo($this->testUserId);
         $this->assertSame(
-            "I've updated your Public Key, but it looks broken, and identity verification failed too! Make sure you encrypt your actual username, and generate a new key or be certain that you correctly copied it here!",
+            "I've updated your Public Key, but it looks broken! Additionally, your encrypted message still fails identity verification! Fix your encrypted username and generate a new key.",
             $reply
         );
     }
