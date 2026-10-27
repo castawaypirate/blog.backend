@@ -74,21 +74,27 @@ class UserService
         return ['success' => false, 'message' => 'User not found.'];
     }
 
-    public function uploadProfilePic(int $userId, array $file): array
+    public function uploadProfilePic(int $userId, array $file, string $mimeType): array
     {
         $uploads = defined('ROOT_DIR') ? ROOT_DIR . '/uploads/' : __DIR__ . '/../../uploads/';
+
+        // the stored name never comes from the client: extension from the detected type, random basename
+        $extensions = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif'];
+        if (!isset($extensions[$mimeType])) {
+            return ['success' => false, 'message' => 'Invalid file type. Only JPEG, PNG, and GIF are allowed.'];
+        }
 
         $user = $this->userRepository->findById($userId);
         if (!$user) {
             return ['success' => false, 'message' => 'Failed to select user\'s data.'];
         }
 
-        $username = $user->getUsername();
         $currentPath = $user->getProfilePicPath();
 
-        $newProfilePicExtension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        // kept only as data; it is never used to build a path
+        $originalName = mb_substr(basename($file['name']), 0, 255);
 
-        $userDirectory = $uploads . $username;
+        $userDirectory = $uploads . $userId;
         if (!is_dir($userDirectory)) {
             if (!mkdir($userDirectory, 0777, true)) {
                 return ['success' => false, 'message' => 'Failed to create user directory.'];
@@ -105,7 +111,7 @@ class UserService
             }
         }
 
-        $shortPath = $username . '/' . $file['name'];
+        $shortPath = $userId . '/' . bin2hex(random_bytes(16)) . '.' . $extensions[$mimeType];
         $destination = $uploads . $shortPath;
 
         if (!move_uploaded_file($file['tmp_name'], $destination)) {
@@ -115,7 +121,7 @@ class UserService
             return ['success' => false, 'message' => 'Can\'t move uploaded file.'];
         }
 
-        if ($this->userRepository->updateProfilePic($userId, $shortPath, $file['type'])) {
+        if ($this->userRepository->updateProfilePic($userId, $shortPath, $mimeType, $originalName)) {
             if ($tempBackupPath) {
                 unlink($tempBackupPath);
             }

@@ -1,6 +1,8 @@
 Options -Indexes
 RewriteEngine on
 RewriteBase /
+# uploads/ only serves images; anything else (e.g. an uploaded .php) is refused
+RewriteRule ^uploads/(?!.+\.(jpe?g|png|gif)$) - [F,NC,L]
 RewriteCond  %{REQUEST_FILENAME} !-f
 RewriteCond  %{REQUEST_FILENAME} !-d
 RewriteRule  ^(.*)$ ./index.php?param=$1 [QSA,L]

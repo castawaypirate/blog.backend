@@ -11,8 +11,9 @@ class User implements JsonSerializable
     private $profilePicPath;
     private $profilePicMimeType;
     private $deletedAt;
+    private $profilePicOriginalName;
 
-    public function __construct($id, $username, $email, $password, $createdAt = null, $lastLogin = null, $profilePicPath = null, $profilePicMimeType = null, $deletedAt = null)
+    public function __construct($id, $username, $email, $password, $createdAt = null, $lastLogin = null, $profilePicPath = null, $profilePicMimeType = null, $deletedAt = null, $profilePicOriginalName = null)
     {
         $this->id = $id;
         $this->username = $username;
@@ -23,6 +24,7 @@ class User implements JsonSerializable
         $this->profilePicPath = $profilePicPath;
         $this->profilePicMimeType = $profilePicMimeType;
         $this->deletedAt = $deletedAt;
+        $this->profilePicOriginalName = $profilePicOriginalName;
     }
 
     public function getId()
@@ -60,6 +62,10 @@ class User implements JsonSerializable
     public function getDeletedAt()
     {
         return $this->deletedAt;
+    }
+    public function getProfilePicOriginalName()
+    {
+        return $this->profilePicOriginalName;
     }
 
     public function jsonSerialize(): mixed

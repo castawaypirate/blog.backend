@@ -102,13 +102,14 @@ class UserRepository
         }
     }
 
-    public function updateProfilePic(int $userId, string $path, string $type): bool
+    public function updateProfilePic(int $userId, string $path, string $type, string $originalName): bool
     {
         try {
-            $updateQuery = "UPDATE " . $this->table . " SET profile_pic_path = :path, profile_pic_mime_type = :type WHERE id = :userId";
+            $updateQuery = "UPDATE " . $this->table . " SET profile_pic_path = :path, profile_pic_mime_type = :type, profile_pic_original_name = :originalName WHERE id = :userId";
             $updateStatement = $this->dbConnection->prepare($updateQuery);
             $updateStatement->bindParam(':path', $path, PDO::PARAM_STR);
             $updateStatement->bindParam(':type', $type, PDO::PARAM_STR);
+            $updateStatement->bindParam(':originalName', $originalName, PDO::PARAM_STR);
             $updateStatement->bindParam(':userId', $userId, PDO::PARAM_INT);
             return $updateStatement->execute();
         } catch (PDOException $e) {
@@ -120,7 +121,7 @@ class UserRepository
     public function removeProfilePic(int $userId): bool
     {
         try {
-            $updateQuery = "UPDATE " . $this->table . " SET profile_pic_path = NULL, profile_pic_mime_type = NULL WHERE id = :userId";
+            $updateQuery = "UPDATE " . $this->table . " SET profile_pic_path = NULL, profile_pic_mime_type = NULL, profile_pic_original_name = NULL WHERE id = :userId";
             $updateStatement = $this->dbConnection->prepare($updateQuery);
             $updateStatement->bindParam(':userId', $userId, PDO::PARAM_INT);
             return $updateStatement->execute();
@@ -217,7 +218,8 @@ class UserRepository
             $row['last_login'],
             $row['profile_pic_path'],
             $row['profile_pic_mime_type'],
-            $row['deleted_at']
+            $row['deleted_at'],
+            $row['profile_pic_original_name'] ?? null
         );
     }
 }

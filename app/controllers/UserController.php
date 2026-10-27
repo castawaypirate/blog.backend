@@ -74,7 +74,7 @@ class UserController extends BaseController
             return ['success' => false, 'message' => 'Invalid file type. Only JPEG, PNG, and GIF are allowed.'];
         }
 
-        return $this->userService->uploadProfilePic($userId, $uploadedFile);
+        return $this->userService->uploadProfilePic($userId, $uploadedFile, $mimeType);
     }
 
     public function getProfilePic($userId)
