@@ -1,6 +1,10 @@
 Options -Indexes
 RewriteEngine on
 RewriteBase /
+# never serve secrets, code or project files directly; only index.php (the API) and uploads/ are public
+RewriteRule (^|/)\. - [F]
+RewriteRule ^(app|tests|vendor)(/|$) - [F,NC]
+RewriteRule ^(composer\.(json|lock)|phpunit\.xml|README\.md|LICENSE)$ - [F,NC]
 # uploads/ only serves images; anything else (e.g. an uploaded .php) is refused
 RewriteRule ^uploads/(?!.+\.(jpe?g|png|gif)$) - [F,NC,L]
 RewriteCond  %{REQUEST_FILENAME} !-f
