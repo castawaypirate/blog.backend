@@ -25,14 +25,9 @@ class PostService
         try {
             $this->dbConnection->beginTransaction();
 
-            $lastPost = $this->postRepository->getLastPostByUserId($userId);
-            if ($lastPost) {
-                $lastPostTime = new DateTime($lastPost['created_at']);
-                $currentTime = new DateTime();
-                $timeDiff = $currentTime->diff($lastPostTime);
-                if ($timeDiff->i < 10 && $timeDiff->h == 0 && $timeDiff->days == 0) {
-                    return ['success' => false, 'timeDiff' => $timeDiff, 'message' => 'Please wait at least 10 minutes before creating a new post.'];
-                }
+            if ($this->postRepository->hasRecentPostByUserId($userId, 600)) {
+                $this->dbConnection->rollBack();
+                return ['success' => false, 'message' => 'Please wait at least 10 minutes before creating a new post.'];
             }
 
             $post = new Post($userId, $title, $body);

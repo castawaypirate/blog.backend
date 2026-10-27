@@ -158,12 +158,13 @@ class UserRepository
         }
     }
 
-    public function markAsDeleted(int $userId, string $deletionTimestamp): bool
+    public function markAsDeleted(int $userId, int $delaySeconds): bool
     {
         try {
-            $updateDeletedAtSql = "UPDATE " . $this->table . " SET deleted_at = :deletionTimestamp WHERE id = :userId";
+            // computed with the DB clock, the same one the delete_users event compares against
+            $updateDeletedAtSql = "UPDATE " . $this->table . " SET deleted_at = NOW() + INTERVAL :delaySeconds SECOND WHERE id = :userId";
             $updateDeletedAtStmt = $this->dbConnection->prepare($updateDeletedAtSql);
-            $updateDeletedAtStmt->bindParam(':deletionTimestamp', $deletionTimestamp, PDO::PARAM_STR);
+            $updateDeletedAtStmt->bindParam(':delaySeconds', $delaySeconds, PDO::PARAM_INT);
             $updateDeletedAtStmt->bindParam(':userId', $userId, PDO::PARAM_INT);
             return $updateDeletedAtStmt->execute();
         } catch (PDOException $e) {

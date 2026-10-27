@@ -29,14 +29,9 @@ class CommentService
         try {
             $this->dbConnection->beginTransaction();
 
-            $lastComment = $this->commentRepository->getLastCommentByUserId($userId);
-            if ($lastComment) {
-                $lastCommentTime = new DateTime($lastComment['created_at']);
-                $currentTime = new DateTime();
-                $timeDiff = $currentTime->diff($lastCommentTime);
-                if ($timeDiff->i < 1 && $timeDiff->h == 0 && $timeDiff->days == 0) { // Check for less than 1 minute, ensuring hours and days are also 0
-                    return ['success' => false, 'timeDiff' => $timeDiff, 'message' => 'Please wait at least 1 minute before posting a new comment.'];
-                }
+            if ($this->commentRepository->hasRecentCommentByUserId($userId, 60)) {
+                $this->dbConnection->rollBack();
+                return ['success' => false, 'message' => 'Please wait at least 1 minute before posting a new comment.'];
             }
 
             $checkPostSql = "SELECT COUNT(*) FROM Posts WHERE id = :postId";

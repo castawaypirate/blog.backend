@@ -26,13 +26,15 @@ class PostRepository
         return $stmt->execute();
     }
 
-    public function getLastPostByUserId($userId)
+    public function hasRecentPostByUserId($userId, $seconds)
     {
-        $sql = "SELECT created_at FROM Posts WHERE user_id = :userId ORDER BY created_at DESC LIMIT 1";
+        // compared in SQL so PHP's time zone doesn't matter
+        $sql = "SELECT 1 FROM Posts WHERE user_id = :userId AND created_at > NOW() - INTERVAL :seconds SECOND LIMIT 1";
         $stmt = $this->dbConnection->prepare($sql);
         $stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
+        $stmt->bindParam(':seconds', $seconds, PDO::PARAM_INT);
         $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        return (bool) $stmt->fetchColumn();
     }
 
     public function getTotalPosts()

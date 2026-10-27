@@ -223,10 +223,7 @@ class UserService
 
     public function deleteUser(int $userId): array
     {
-        $currentTimestamp = new DateTime();
-        $deletionTimestamp = $currentTimestamp->add(new DateInterval('PT' . $this->userDeletionDelay . 'S'))->format('Y-m-d H:i:s');
-
-        if ($this->userRepository->markAsDeleted($userId, $deletionTimestamp)) {
+        if ($this->userRepository->markAsDeleted($userId, (int) $this->userDeletionDelay)) {
             return ['success' => true, 'message' => 'User marked as deleted successfully.'];
         }
         return ['success' => false, 'message' => 'Failed to mark user as deleted.'];
