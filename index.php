@@ -28,7 +28,16 @@ require_once('app/services/CommentService.php');
 require_once('app/db/database.php');
 
 $database = new Database();
-$dbConnection = $database->getConnection();
+try {
+    $dbConnection = $database->getConnection();
+} catch (Exception $e) {
+    // the exception text contains the DB host and user, so it only goes to the log
+    error_log('Database connection: ' . $e->getMessage());
+    http_response_code(500);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['success' => false, 'message' => 'Something went wrong. Please try again.']);
+    exit;
+}
 $userRepository = new UserRepository($dbConnection);
 $messageRepository = new MessageRepository($dbConnection);
 $userService = new UserService($userRepository, $messageRepository);

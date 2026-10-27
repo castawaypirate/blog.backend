@@ -41,7 +41,8 @@ class PostService
 
         } catch (Exception $e) {
             $this->dbConnection->rollBack();
-            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+            error_log(__METHOD__ . ': ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Something went wrong. Please try again.'];
         }
     }
 
@@ -78,7 +79,8 @@ class PostService
             ];
 
         } catch (Exception $e) {
-            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+            error_log(__METHOD__ . ': ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Something went wrong. Please try again.'];
         }
     }
 
@@ -115,7 +117,8 @@ class PostService
             ];
 
         } catch (Exception $e) {
-            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+            error_log(__METHOD__ . ': ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Something went wrong. Please try again.'];
         }
     }
 
@@ -132,7 +135,8 @@ class PostService
                 return ['success' => false, 'message' => 'postId not found'];
             }
         } catch (Exception $e) {
-            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+            error_log(__METHOD__ . ': ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Something went wrong. Please try again.'];
         }
     }
 
@@ -155,7 +159,8 @@ class PostService
                 return ['success' => false, 'message' => 'Error updating the post.'];
             }
         } catch (Exception $e) {
-            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+            error_log(__METHOD__ . ': ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Something went wrong. Please try again.'];
         }
     }
 
@@ -178,7 +183,8 @@ class PostService
             }
 
         } catch (Exception $e) {
-            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+            error_log(__METHOD__ . ': ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Something went wrong. Please try again.'];
         }
     }
 
@@ -199,7 +205,8 @@ class PostService
 
             $post = $this->postRepository->getById($postId);
             if (!$post) {
-                throw new Exception("Post ID does not exist.");
+                $this->dbConnection->rollBack();
+                return ['success' => false, 'message' => 'Post ID does not exist.'];
             }
 
             $currentVote = $this->postRepository->getVote($userId, $postId);
@@ -246,7 +253,8 @@ class PostService
             if ($this->dbConnection->inTransaction()) {
                 $this->dbConnection->rollBack();
             }
-            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+            error_log(__METHOD__ . ': ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Something went wrong. Please try again.'];
         }
     }
 
@@ -268,7 +276,8 @@ class PostService
             }
             return ['success' => true, 'data' => $userVotes];
         } catch (Exception $e) {
-            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+            error_log(__METHOD__ . ': ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Something went wrong. Please try again.'];
         }
     }
 }

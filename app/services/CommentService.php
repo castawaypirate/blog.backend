@@ -54,7 +54,8 @@ class CommentService
 
         } catch (Exception $e) {
             $this->dbConnection->rollBack();
-            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+            error_log(__METHOD__ . ': ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Something went wrong. Please try again.'];
         }
     }
 
@@ -70,7 +71,8 @@ class CommentService
             }
             return ['success' => true, 'message' => 'Everything\'s good.', 'comments' => $comments];
         } catch (Exception $e) {
-            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+            error_log(__METHOD__ . ': ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Something went wrong. Please try again.'];
         }
     }
 
@@ -86,7 +88,8 @@ class CommentService
             $ids = array_column($comments, 'id');
             return ['success' => true, 'data' => $ids];
         } catch (Exception $e) {
-            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+            error_log(__METHOD__ . ': ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Something went wrong. Please try again.'];
         }
     }
 
@@ -121,7 +124,8 @@ class CommentService
                 return ['success' => false, 'message' => 'Error updating the comment.'];
             }
         } catch (Exception $e) {
-            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+            error_log(__METHOD__ . ': ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Something went wrong. Please try again.'];
         }
     }
 
@@ -149,7 +153,8 @@ class CommentService
             }
 
         } catch (Exception $e) {
-            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+            error_log(__METHOD__ . ': ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Something went wrong. Please try again.'];
         }
     }
 
@@ -170,7 +175,8 @@ class CommentService
 
             $comment = $this->commentRepository->getByIdAndPostId($commentId, $postId);
             if (!$comment) {
-                throw new Exception("Comment ID or Post ID does not exist.");
+                $this->dbConnection->rollBack();
+                return ['success' => false, 'message' => 'Comment ID or Post ID does not exist.'];
             }
 
             $currentVote = $this->commentRepository->getVote($userId, $commentId);
@@ -218,7 +224,8 @@ class CommentService
             if ($this->dbConnection->inTransaction()) {
                 $this->dbConnection->rollBack();
             }
-            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+            error_log(__METHOD__ . ': ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Something went wrong. Please try again.'];
         }
     }
 
@@ -240,7 +247,8 @@ class CommentService
             }
             return ['success' => true, 'data' => $userVotes];
         } catch (Exception $e) {
-            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+            error_log(__METHOD__ . ': ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Something went wrong. Please try again.'];
         }
     }
 }

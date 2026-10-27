@@ -58,6 +58,12 @@ class UserService
         return [];
     }
 
+    public function isActiveUser(int $userId): bool
+    {
+        $user = $this->userRepository->findById($userId);
+        return $user !== null && $user->getDeletedAt() === null;
+    }
+
     public function getUserData(int $userId): array
     {
         $user = $this->userRepository->findById($userId);

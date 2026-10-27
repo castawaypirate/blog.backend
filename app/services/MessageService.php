@@ -48,7 +48,8 @@ class MessageService
                 return ['success' => false, 'message' => 'Failed to send message.'];
             }
         } catch (PDOException $e) {
-            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+            error_log(__METHOD__ . ': ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Something went wrong. Please try again.'];
         }
     }
 
@@ -97,7 +98,8 @@ class MessageService
                 return ['success' => false, 'message' => 'Error deleting the message.'];
             }
         } catch (Exception $e) {
-            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+            error_log(__METHOD__ . ': ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Something went wrong. Please try again.'];
         }
     }
 }

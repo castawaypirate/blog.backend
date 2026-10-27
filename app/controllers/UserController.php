@@ -26,6 +26,11 @@ class UserController extends BaseController
         require_once __DIR__ . '/../middleware/JwtMiddleware.php';
         $jwtMiddleware = new JWTMiddleware(JWTHelper::getSecretKey());
         $result = $jwtMiddleware->validateToken();
+
+        // a valid signature isn't enough: the account must still exist and not be marked for deletion
+        if ($result['success'] && !$this->userService->isActiveUser((int) $result['user']->user_id)) {
+            return ['success' => false, 'message' => 'Token validation failed.'];
+        }
         return $result;
     }
 
