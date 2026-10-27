@@ -57,7 +57,7 @@ class MazeChallengeRepository
     public function findByUserId($userId)
     {
         try {
-            $query = "SELECT * FROM " . $this->table . " WHERE user_id = :user_id ORDER BY created_at DESC LIMIT 1";
+            $query = "SELECT * FROM " . $this->table . " WHERE user_id = :user_id ORDER BY id DESC LIMIT 1";
             $stmt = $this->dbConnection->prepare($query);
             $stmt->bindParam(':user_id', $userId);
             $stmt->execute();
