@@ -214,11 +214,17 @@ class PostService
 
             if ($action === 'upvote') {
                 if ($currentVote === 1) {
-                    $this->postRepository->deleteVote($userId, $postId, 1);
+                    if (!$this->postRepository->deleteVote($userId, $postId, 1)) {
+                        // a parallel request already changed this vote; the catch below rolls back
+                        throw new RuntimeException('Vote changed by another request.');
+                    }
                     $this->postRepository->decrementUpvotes($postId);
                     $message = ['success' => true, 'action' => 'unvote', 'message' => 'User successfully unvoted the post.'];
                 } elseif ($currentVote === -1) {
-                    $this->postRepository->deleteVote($userId, $postId, -1);
+                    if (!$this->postRepository->deleteVote($userId, $postId, -1)) {
+                        // a parallel request already changed this vote; the catch below rolls back
+                        throw new RuntimeException('Vote changed by another request.');
+                    }
                     $this->postRepository->decrementDownvotes($postId);
                     $this->postRepository->addVote($userId, $postId, 1);
                     $this->postRepository->incrementUpvotes($postId);
@@ -230,11 +236,17 @@ class PostService
                 }
             } else {
                 if ($currentVote === -1) {
-                    $this->postRepository->deleteVote($userId, $postId, -1);
+                    if (!$this->postRepository->deleteVote($userId, $postId, -1)) {
+                        // a parallel request already changed this vote; the catch below rolls back
+                        throw new RuntimeException('Vote changed by another request.');
+                    }
                     $this->postRepository->decrementDownvotes($postId);
                     $message = ['success' => true, 'action' => 'unvote', 'message' => 'User successfully unvoted the post.'];
                 } elseif ($currentVote === 1) {
-                    $this->postRepository->deleteVote($userId, $postId, 1);
+                    if (!$this->postRepository->deleteVote($userId, $postId, 1)) {
+                        // a parallel request already changed this vote; the catch below rolls back
+                        throw new RuntimeException('Vote changed by another request.');
+                    }
                     $this->postRepository->decrementUpvotes($postId);
                     $this->postRepository->addVote($userId, $postId, -1);
                     $this->postRepository->incrementDownvotes($postId);

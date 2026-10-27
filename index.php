@@ -1,17 +1,7 @@
 <?php
 define('POSTS_PER_PAGE', 14);
 
-header('Access-Control-Allow-Origin: *');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    header('Access-Control-Allow-Methods: *');
-    header('Access-Control-Allow-Headers: Authorization, Content-Type, X-Requested-With');
-    header('Content-Type: text/plain');
-
-    error_log('die');
-    die();
-}
-
+// no CORS headers: the frontend calls the API on its own origin (/api is proxied), so none are needed
 header('Content-Type: application/json');
 
 require_once('app/middleware/JwtMiddleware.php');
@@ -24,6 +14,7 @@ require_once('app/services/PostService.php');
 require_once('app/services/CommentService.php');
 require_once('app/repositories/UserRepository.php');
 require_once('app/repositories/MessageRepository.php');
+require_once('app/repositories/LoginAttemptRepository.php');
 require_once('app/services/CommentService.php');
 require_once('app/db/database.php');
 
@@ -40,7 +31,8 @@ try {
 }
 $userRepository = new UserRepository($dbConnection);
 $messageRepository = new MessageRepository($dbConnection);
-$userService = new UserService($userRepository, $messageRepository);
+$loginAttemptRepository = new LoginAttemptRepository($dbConnection);
+$userService = new UserService($userRepository, $messageRepository, $loginAttemptRepository);
 $userController = new UserController($userService);
 
 $commentService = new CommentService($dbConnection);
@@ -131,7 +123,7 @@ route('/api/posts/upvote', function () use ($postController, $userController) {
         if ($success) {
             $user = $result['user'];
             $userId = $user->user_id;
-            $postId = $request['postId'];
+            $postId = $request['postId'] ?? null;
             $result = $postController->upvotePost($userId, $postId);
         }
         $jsonResult = json_encode($result);
@@ -152,7 +144,7 @@ route('/api/posts/downvote', function () use ($postController, $userController) 
         if ($success) {
             $user = $result['user'];
             $userId = $user->user_id;
-            $postId = $request['postId'];
+            $postId = $request['postId'] ?? null;
             $result = $postController->downvotePost($userId, $postId);
         }
         $jsonResult = json_encode($result);
@@ -305,8 +297,8 @@ route('/api/comments/upvote', function () use ($commentController, $userControll
         if ($success) {
             $user = $result['user'];
             $userId = $user->user_id;
-            $postId = $request['postId'];
-            $commentId = $request['commentId'];
+            $postId = $request['postId'] ?? null;
+            $commentId = $request['commentId'] ?? null;
             $result = $commentController->upvoteComment($userId, $postId, $commentId);
         }
         $jsonResult = json_encode($result);
@@ -327,8 +319,8 @@ route('/api/comments/downvote', function () use ($commentController, $userContro
         if ($success) {
             $user = $result['user'];
             $userId = $user->user_id;
-            $postId = $request['postId'];
-            $commentId = $request['commentId'];
+            $postId = $request['postId'] ?? null;
+            $commentId = $request['commentId'] ?? null;
             $result = $commentController->downvoteComment($userId, $postId, $commentId);
         }
         $jsonResult = json_encode($result);
@@ -739,7 +731,8 @@ function validateRequest($requestMethod, $contentType = '', $authorization = '',
     if ($requestMethod === 'POST' && $contentType === 'JSON') {
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);
-        if ($data === null) {
+        // must be a JSON object; a string, number or list would break the field lookups
+        if (!is_array($data) || array_is_list($data)) {
             // Bad Request (Invalid JSON data)
             http_response_code(400);
             return false;
@@ -750,7 +743,8 @@ function validateRequest($requestMethod, $contentType = '', $authorization = '',
     if ($requestMethod === 'PUT' && $contentType === 'JSON') {
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);
-        if ($data === null) {
+        // must be a JSON object; a string, number or list would break the field lookups
+        if (!is_array($data) || array_is_list($data)) {
             // Bad Request (Invalid JSON data)
             http_response_code(400);
             return false;

@@ -1,27 +1,39 @@
 <?php
 
 require_once __DIR__ . '/../repositories/UserRepository.php';
+require_once __DIR__ . '/../repositories/LoginAttemptRepository.php';
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../utils/jwt_helper.php';
 
 class UserService
 {
+    // failed logins allowed per account and per IP inside the window before access is refused
+    private const MAX_FAILED_LOGINS = 10;
+    private const FAILED_LOGIN_WINDOW = 900;
+
     private $userRepository;
     private $messageRepository;
+    private $loginAttemptRepository;
     private $userDeletionDelay;
 
-    public function __construct(UserRepository $userRepository, MessageRepository $messageRepository)
+    public function __construct(UserRepository $userRepository, MessageRepository $messageRepository, LoginAttemptRepository $loginAttemptRepository)
     {
         $this->userRepository = $userRepository;
         $this->messageRepository = $messageRepository;
+        $this->loginAttemptRepository = $loginAttemptRepository;
         $this->userDeletionDelay = defined('USER_DELETION_DELAY') ? USER_DELETION_DELAY : 7200;
     }
 
-    public function authenticateOrRegister(string $username, string $password, ?string $email = null): array
+    public function authenticateOrRegister(string $username, string $password, string $ip, ?string $email = null): array
     {
         $user = $this->userRepository->findByUsername($username);
 
         if ($user) {
+            if ($this->loginAttemptRepository->countRecentFailuresForUser($user->getId(), self::FAILED_LOGIN_WINDOW) >= self::MAX_FAILED_LOGINS
+                || $this->loginAttemptRepository->countRecentFailuresForIp($ip, self::FAILED_LOGIN_WINDOW) >= self::MAX_FAILED_LOGINS) {
+                return ['success' => false, 'message' => 'Too many attempts. Try again later.'];
+            }
+
             if (password_verify($password, $user->getPassword())) {
                 $this->userRepository->updateLastLogin($user->getId());
                 $this->userRepository->undoDeletion($user->getId());
@@ -32,6 +44,7 @@ class UserService
                 }
                 return ['success' => false, 'message' => 'Failed to generate JWT token.'];
             } else {
+                $this->loginAttemptRepository->recordFailure($user->getId(), $ip);
                 return ['success' => false, 'message' => 'Wrong password.'];
             }
         }

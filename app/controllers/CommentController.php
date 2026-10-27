@@ -20,6 +20,9 @@ class CommentController extends BaseController
         if (!isset($request['body'])) {
             return ['success' => false, 'message' => 'Body is required.'];
         }
+        if (!is_string($request['body'])) {
+            return ['success' => false, 'message' => 'Body must be text.'];
+        }
 
         return $this->commentService->createComment($userId, $request);
     }
@@ -67,11 +70,18 @@ class CommentController extends BaseController
 
     public function editComment($userId, $request)
     {
-        if (!is_int($request['postId']) || !filter_var($request['postId'], FILTER_VALIDATE_INT) || $request['postId'] <= 0) {
+        if (!isset($request['postId']) || !is_int($request['postId']) || !filter_var($request['postId'], FILTER_VALIDATE_INT) || $request['postId'] <= 0) {
             return ['success' => false, 'message' => 'Invalid post ID.'];
         }
         if (!isset($request['body'])) {
             return ['success' => false, 'message' => 'Body is required.'];
+        }
+        if (!is_string($request['body'])) {
+            return ['success' => false, 'message' => 'Body must be text.'];
+        }
+        // same rule as createComment: an edit can't blank the comment
+        if (trim($request['body']) === '') {
+            return ['success' => false, 'message' => 'Body is empty.'];
         }
 
         return $this->commentService->editComment($userId, $request);

@@ -165,7 +165,9 @@ class CommentRepository
         $stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
         $stmt->bindParam(':commentId', $commentId, PDO::PARAM_INT);
         $stmt->bindParam(':voteType', $voteType, PDO::PARAM_INT);
-        return $stmt->execute();
+        $stmt->execute();
+        // false when another request already removed the vote, so the counter is not decremented twice
+        return $stmt->rowCount() > 0;
     }
 
     public function addVote($userId, $commentId, $voteType)

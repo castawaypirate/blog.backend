@@ -16,6 +16,9 @@ class PostController extends BaseController
         if (!isset($request['title']) || !isset($request['body'])) {
             return ['success' => false, 'message' => 'Title and body are required.'];
         }
+        if (!is_string($request['title']) || !is_string($request['body'])) {
+            return ['success' => false, 'message' => 'Title and body must be text.'];
+        }
 
         return $this->postService->createPost($userId, $request);
     }
@@ -67,6 +70,13 @@ class PostController extends BaseController
         }
         if (!isset($request['title']) || !isset($request['body'])) {
             return ['success' => false, 'message' => 'Title and body are required.'];
+        }
+        if (!is_string($request['title']) || !is_string($request['body'])) {
+            return ['success' => false, 'message' => 'Title and body must be text.'];
+        }
+        // same rule as createPost: an edit can't blank the post
+        if (trim($request['title']) === '' || trim($request['body']) === '') {
+            return ['success' => false, 'message' => 'Title or body are empty.'];
         }
         $postId = $_GET['postId'];
         $title = $request['title'];

@@ -20,7 +20,13 @@ class MessageService
             return ['success' => false, 'message' => 'Receiver ID and content are required.'];
         }
 
-        $receiverId = $request['receiverId'];
+        $receiverId = filter_var($request['receiverId'], FILTER_VALIDATE_INT);
+        if ($receiverId === false || $receiverId <= 0) {
+            return ['success' => false, 'message' => 'Invalid receiver ID.'];
+        }
+        if (!is_string($request['content'])) {
+            return ['success' => false, 'message' => 'Message content must be text.'];
+        }
         $content = trim($request['content']);
 
         if (empty($content)) {

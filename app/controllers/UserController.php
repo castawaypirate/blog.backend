@@ -16,8 +16,33 @@ class UserController extends BaseController
         if (!isset($request['username']) || !isset($request['password'])) {
             return ['success' => false, 'message' => 'Username and password are required.'];
         }
+        if (!is_string($request['username']) || !is_string($request['password'])) {
+            return ['success' => false, 'message' => 'Username and password must be text.'];
+        }
+        if (isset($request['email']) && !is_string($request['email'])) {
+            return ['success' => false, 'message' => 'Email must be text.'];
+        }
 
-        return $this->userService->authenticateOrRegister($request['username'], $request['password'], $request['email'] ?? null);
+        return $this->userService->authenticateOrRegister($request['username'], $request['password'], $this->getClientIp(), $request['email'] ?? null);
+    }
+
+    // The API only gets requests through local Apache proxies, so REMOTE_ADDR is loopback.
+    // Each proxy appends the address it saw to X-Forwarded-For, so the real client is the
+    // right-most entry that isn't loopback. Entries left of it come from the client and can be faked.
+    private function getClientIp(): string
+    {
+        $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '';
+        if (!in_array($remoteAddr, ['127.0.0.1', '::1'], true) || empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            return $remoteAddr;
+        }
+
+        $forwarded = array_reverse(array_map('trim', explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])));
+        foreach ($forwarded as $ip) {
+            if (!in_array($ip, ['127.0.0.1', '::1'], true)) {
+                return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : $remoteAddr;
+            }
+        }
+        return $remoteAddr;
     }
 
     public function validateUser()
@@ -97,6 +122,9 @@ class UserController extends BaseController
         if (!isset($request['username'])) {
             return ['success' => false, 'message' => 'Username is required.'];
         }
+        if (!is_string($request['username'])) {
+            return ['success' => false, 'message' => 'Username must be text.'];
+        }
 
         return $this->userService->changeUsername($userId, $request['username']);
     }
@@ -109,6 +137,10 @@ class UserController extends BaseController
 
         if (!isset($request['newPassword'])) {
             return ['success' => false, 'message' => 'New password is required.'];
+        }
+
+        if (!is_string($request['oldPassword']) || !is_string($request['newPassword'])) {
+            return ['success' => false, 'message' => 'Passwords must be text.'];
         }
 
         if ($request['newPassword'] === $request['oldPassword']) {

@@ -185,11 +185,17 @@ class CommentService
 
             if ($action === 'upvote') {
                 if ($currentVote === 1) {
-                    $this->commentRepository->deleteVote($userId, $commentId, 1);
+                    if (!$this->commentRepository->deleteVote($userId, $commentId, 1)) {
+                        // a parallel request already changed this vote; the catch below rolls back
+                        throw new RuntimeException('Vote changed by another request.');
+                    }
                     $this->commentRepository->decrementUpvotes($commentId);
                     $message = ['success' => true, 'action' => 'unvote', 'message' => 'User successfully unvoted the comment.'];
                 } elseif ($currentVote === -1) {
-                    $this->commentRepository->deleteVote($userId, $commentId, -1);
+                    if (!$this->commentRepository->deleteVote($userId, $commentId, -1)) {
+                        // a parallel request already changed this vote; the catch below rolls back
+                        throw new RuntimeException('Vote changed by another request.');
+                    }
                     $this->commentRepository->decrementDownvotes($commentId);
                     $this->commentRepository->addVote($userId, $commentId, 1);
                     $this->commentRepository->incrementUpvotes($commentId);
@@ -201,11 +207,17 @@ class CommentService
                 }
             } else {
                 if ($currentVote === -1) {
-                    $this->commentRepository->deleteVote($userId, $commentId, -1);
+                    if (!$this->commentRepository->deleteVote($userId, $commentId, -1)) {
+                        // a parallel request already changed this vote; the catch below rolls back
+                        throw new RuntimeException('Vote changed by another request.');
+                    }
                     $this->commentRepository->decrementDownvotes($commentId);
                     $message = ['success' => true, 'action' => 'unvote', 'message' => 'User successfully unvoted the comment.'];
                 } elseif ($currentVote === 1) {
-                    $this->commentRepository->deleteVote($userId, $commentId, 1);
+                    if (!$this->commentRepository->deleteVote($userId, $commentId, 1)) {
+                        // a parallel request already changed this vote; the catch below rolls back
+                        throw new RuntimeException('Vote changed by another request.');
+                    }
                     $this->commentRepository->decrementUpvotes($commentId);
                     $this->commentRepository->addVote($userId, $commentId, -1);
                     $this->commentRepository->incrementDownvotes($commentId);
