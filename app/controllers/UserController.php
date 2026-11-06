@@ -78,30 +78,34 @@ class UserController extends BaseController
 
         $uploadedFile = $_FILES['profilePic'];
 
-        // pic must be 2MB max
-        if ($uploadedFile['size'] > 10000000) {
-            return ['success' => false, 'message' => 'File bigger than 2MB.'];
-        }
-
-        if ($uploadedFile['error'] !== 0) {
+        if ($uploadedFile['error'] !== UPLOAD_ERR_OK) {
             return ['success' => false, 'message' => 'Error code: ' . $uploadedFile['error']];
         }
 
+        // pic must be 10MB max
+        if ($uploadedFile['size'] > 10000000) {
+            return ['success' => false, 'message' => 'File bigger than 10MB.'];
+        }
+
+        // the type comes from the file content only, never from the client's name or declared type
         $finfo = new finfo(FILEINFO_MIME_TYPE);
         $mimeType = $finfo->file($uploadedFile['tmp_name']);
 
         $allowedMimeTypes = [
             'image/jpeg',
             'image/png',
+            'image/webp',
             'image/gif'
         ];
 
-        if (!in_array($mimeType, $allowedMimeTypes)) {
-            return ['success' => false, 'message' => 'Invalid file type (finfo). Only JPEG, PNG, and GIF are allowed.'];
+        if (!in_array($mimeType, $allowedMimeTypes, true)) {
+            return ['success' => false, 'message' => 'Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed.'];
         }
 
-        if (!in_array($uploadedFile['type'], $allowedMimeTypes)) {
-            return ['success' => false, 'message' => 'Invalid file type. Only JPEG, PNG, and GIF are allowed.'];
+        // it must also parse as a real image of that same type
+        $imageInfo = @getimagesize($uploadedFile['tmp_name']);
+        if ($imageInfo === false || $imageInfo['mime'] !== $mimeType) {
+            return ['success' => false, 'message' => 'File is not a valid image.'];
         }
 
         return $this->userService->uploadProfilePic($userId, $uploadedFile, $mimeType);
