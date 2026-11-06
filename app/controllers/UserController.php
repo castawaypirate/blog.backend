@@ -64,9 +64,30 @@ class UserController extends BaseController
         return $this->userService->getUserData($userId);
     }
 
+    private static function postMaxBytes(): int
+    {
+        $value = trim((string) ini_get('post_max_size'));
+        $number = (int) $value;
+        switch (strtolower(substr($value, -1))) {
+            case 'g':
+                $number *= 1024;
+                // no break
+            case 'm':
+                $number *= 1024;
+                // no break
+            case 'k':
+                $number *= 1024;
+        }
+        return $number;
+    }
+
     public function uploadProfilePic($userId)
     {
         if (empty($_FILES)) {
+            // PHP drops the whole upload when the request is bigger than post_max_size
+            if ((int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > self::postMaxBytes()) {
+                return ['success' => false, 'message' => 'File bigger than 10MB.'];
+            }
             return ['success' => false, 'message' => 'File not found.'];
         }
 
@@ -77,6 +98,10 @@ class UserController extends BaseController
         }
 
         $uploadedFile = $_FILES['profilePic'];
+
+        if ($uploadedFile['error'] === UPLOAD_ERR_INI_SIZE || $uploadedFile['error'] === UPLOAD_ERR_FORM_SIZE) {
+            return ['success' => false, 'message' => 'File bigger than 10MB.'];
+        }
 
         if ($uploadedFile['error'] !== UPLOAD_ERR_OK) {
             return ['success' => false, 'message' => 'Error code: ' . $uploadedFile['error']];
