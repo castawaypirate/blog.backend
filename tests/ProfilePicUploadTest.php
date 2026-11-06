@@ -116,6 +116,14 @@ class ProfilePicUploadTest extends TestCase
         $this->assertSame([], $this->filesInUploads());
     }
 
+    public function testPhpIniSizeLimitGivesSizeMessage(): void
+    {
+        $_FILES = ["profilePic" => ["name" => "a.png", "type" => "image/png", "tmp_name" => "", "error" => UPLOAD_ERR_INI_SIZE, "size" => 0]];
+        $result = $this->controller->uploadProfilePic(self::USER_ID);
+        $this->assertFalse($result["success"]);
+        $this->assertSame("File bigger than 10MB.", $result["message"]);
+    }
+
     public function testValidPngIsStoredUnderRandomName(): void
     {
         $result = $this->upload($this->png(), 'avatar.png');
