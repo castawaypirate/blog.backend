@@ -15,9 +15,14 @@ class UserService
     private $messageRepository;
     private $loginAttemptRepository;
     private $userDeletionDelay;
+    private $fileMover;
+    private $uploadsDir;
 
-    public function __construct(UserRepository $userRepository, MessageRepository $messageRepository, LoginAttemptRepository $loginAttemptRepository)
+    public function __construct(UserRepository $userRepository, MessageRepository $messageRepository, LoginAttemptRepository $loginAttemptRepository, ?callable $fileMover = null, ?string $uploadsDir = null)
     {
+        // tests inject a mover because move_uploaded_file only accepts real HTTP uploads
+        $this->fileMover = $fileMover ?? 'move_uploaded_file';
+        $this->uploadsDir = $uploadsDir ?? (defined('ROOT_DIR') ? ROOT_DIR . '/uploads/' : __DIR__ . '/../../uploads/');
         $this->userRepository = $userRepository;
         $this->messageRepository = $messageRepository;
         $this->loginAttemptRepository = $loginAttemptRepository;
@@ -95,12 +100,12 @@ class UserService
 
     public function uploadProfilePic(int $userId, array $file, string $mimeType): array
     {
-        $uploads = defined('ROOT_DIR') ? ROOT_DIR . '/uploads/' : __DIR__ . '/../../uploads/';
+        $uploads = $this->uploadsDir;
 
         // the stored name never comes from the client: extension from the detected type, random basename
-        $extensions = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif'];
+        $extensions = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/gif' => 'gif'];
         if (!isset($extensions[$mimeType])) {
-            return ['success' => false, 'message' => 'Invalid file type. Only JPEG, PNG, and GIF are allowed.'];
+            return ['success' => false, 'message' => 'Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed.'];
         }
 
         $user = $this->userRepository->findById($userId);
@@ -115,15 +120,16 @@ class UserService
 
         $userDirectory = $uploads . $userId;
         if (!is_dir($userDirectory)) {
-            if (!mkdir($userDirectory, 0777, true)) {
+            if (!mkdir($userDirectory, 0755, true)) {
                 return ['success' => false, 'message' => 'Failed to create user directory.'];
             }
         }
 
         $tempBackupPath = null;
-        $fullCurrentPath = $currentPath ? $uploads . $currentPath : null;
+        // only files we named ourselves, inside this user's own folder, are ever touched
+        $fullCurrentPath = $this->ownedPicturePath($uploads, $userId, $currentPath);
 
-        if ($fullCurrentPath && file_exists($fullCurrentPath)) {
+        if ($fullCurrentPath) {
             $tempBackupPath = $fullCurrentPath . '.bak';
             if (!rename($fullCurrentPath, $tempBackupPath)) {
                 return ['success' => false, 'message' => 'Old to new process failure.'];
@@ -133,7 +139,7 @@ class UserService
         $shortPath = $userId . '/' . bin2hex(random_bytes(16)) . '.' . $extensions[$mimeType];
         $destination = $uploads . $shortPath;
 
-        if (!move_uploaded_file($file['tmp_name'], $destination)) {
+        if (!($this->fileMover)($file['tmp_name'], $destination)) {
             if ($tempBackupPath) {
                 rename($tempBackupPath, $fullCurrentPath);
             }
@@ -154,6 +160,25 @@ class UserService
         }
     }
 
+    /**
+     * Full path of the user's stored picture, or null if it is missing or is not
+     * <userId>/<32 hex>.<ext> resolving inside the uploads directory (e.g. legacy names).
+     */
+    private function ownedPicturePath(string $uploads, int $userId, ?string $path): ?string
+    {
+        if (!$path || !preg_match('#^' . $userId . '/[a-f0-9]{32}\.(jpg|png|gif|webp)$#', $path)) {
+            return null;
+        }
+
+        $root = realpath($uploads);
+        $full = realpath($uploads . $path);
+        if ($root === false || $full === false || strpos($full, $root . DIRECTORY_SEPARATOR) !== 0) {
+            return null;
+        }
+
+        return $full;
+    }
+
     public function getProfilePic(int $userId): array
     {
         $user = $this->userRepository->findById($userId);
@@ -166,7 +191,7 @@ class UserService
             return ['success' => false, 'message' => 'Profile picture path is null.'];
         }
 
-        $uploads = defined('ROOT_DIR') ? ROOT_DIR . '/uploads/' : __DIR__ . '/../../uploads/';
+        $uploads = $this->uploadsDir;
         $fullPath = $uploads . $path;
 
         if (!file_exists($fullPath)) {
@@ -195,11 +220,11 @@ class UserService
             return ['success' => false, 'message' => 'Profile picture does not exist.'];
         }
 
-        $uploads = defined('ROOT_DIR') ? ROOT_DIR . '/uploads/' : __DIR__ . '/../../uploads/';
-        $fullPath = $uploads . $path;
+        $uploads = $this->uploadsDir;
+        $fullPath = $this->ownedPicturePath($uploads, $userId, $path);
 
         if ($this->userRepository->removeProfilePic($userId)) {
-            if (file_exists($fullPath)) {
+            if ($fullPath) {
                 unlink($fullPath);
             }
             return ['success' => true, 'message' => 'Profile picture deleted successfully.'];

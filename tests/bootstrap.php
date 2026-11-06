@@ -24,6 +24,8 @@ require_once $backendRoot . '/app/repositories/MazeChallengeRepository.php';
 require_once $backendRoot . '/app/repositories/MazeProgressRepository.php';
 require_once $backendRoot . '/app/services/MazeService.php';
 require_once $backendRoot . '/app/services/MazeProcessor.php';
+require_once $backendRoot . '/app/repositories/LoginAttemptRepository.php';
+require_once $backendRoot . '/app/controllers/UserController.php';
 
 // --- 3. Test database connection ---
 function getTestDb(): PDO
